@@ -1,0 +1,15 @@
+language: go
+
+go:
+  - 1.15
+
+git:
+  depth: 10
+
+script:
+  - export FMT_CHECK="make fmt-check"
+  - export MAKE_BUILD="make build"
+  - $FMT_CHECK -C ./api-service
+  - $MAKE_BUILD -C ./api-service
+  - $FMT_CHECK -C ./consumer-service
+  - $MAKE_BUILD -C ./consumer-service
