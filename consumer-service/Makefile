@@ -18,4 +18,3 @@ build:
 .PHONY: clean
 clean:
 		go clean
-		rm ./consumer-service
