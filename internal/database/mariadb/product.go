@@ -74,7 +74,7 @@ func (product *Product) FindProductByID(db *gorm.DB, id int) (*Product, error) {
 	return product, nil
 }
 
-func (product *Product) DeleteProduct(db *gorm.DB, id int) (int64, error) {
+func (product *Product) DeleteProductByID(db *gorm.DB, id int) (int64, error) {
 	db = db.Model(&Product{}).Where("ID = ?", id).Take(&Product{}).Delete(&Product{})
 	if db.Error != nil {
 		return 0, db.Error
