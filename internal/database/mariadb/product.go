@@ -32,8 +32,8 @@ func (product *Product) SaveProduct(db *gorm.DB) (*Product, error) {
 	return product, nil
 }
 
-func (product *Product) UpdateProduct(db *gorm.DB, id int) (*Product, error) {
-	db = db.Model(&Product{}).Where("ID = ?", id).Take(&Product{}).UpdateColumns(
+func (product *Product) UpdateProduct(db *gorm.DB) (*Product, error) {
+	db = db.Model(&Product{}).Where("ID = ?", product.ID).Take(&Product{}).UpdateColumns(
 		map[string]interface{}{
 			"Quantity":  product.Quantity,
 			"UpdatedAt": time.Now(),
@@ -44,7 +44,7 @@ func (product *Product) UpdateProduct(db *gorm.DB, id int) (*Product, error) {
 	}
 
 	// check the updated product
-	err := db.Model(&Product{}).Where("ID = ?", id).Take(&product).Error
+	err := db.Model(&Product{}).Where("ID = ?", product.ID).Take(&product).Error
 	if err != nil {
 		return &Product{}, err
 	}
