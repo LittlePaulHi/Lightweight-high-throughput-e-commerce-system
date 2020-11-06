@@ -45,7 +45,7 @@ func (account *Account) UpdateAccount(db *gorm.DB, id int) (*Account, error) {
 	return account, err
 }
 
-func (account *Account) FindAccountByName(db *gorm.DB, id int) (*Account, error) {
+func (account *Account) FindAccountByID(db *gorm.DB, id int) (*Account, error) {
 	err := db.Model(Account{}).Where("ID = ?", id).Take(&account).Error
 	if err != nil {
 		return &Account{}, err
