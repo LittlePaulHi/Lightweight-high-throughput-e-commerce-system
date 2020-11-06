@@ -42,19 +42,19 @@ func (account *Account) UpdateAccount(db *gorm.DB, id int) (*Account, error) {
 		return &Account{}, err
 	}
 
-	return account, err
+	return account, nil
 }
 
 func (account *Account) FindAccountByID(db *gorm.DB, id int) (*Account, error) {
 	err := db.Model(Account{}).Where("ID = ?", id).Take(&account).Error
-	if err != nil {
-		return &Account{}, err
-	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return &Account{}, errors.New("Account Not Found")
 	}
+	if err != nil {
+		return &Account{}, err
+	}
 
-	return account, err
+	return account, nil
 }
 
 func (account *Account) DeleteAccount(db *gorm.DB, id int) (int64, error) {
