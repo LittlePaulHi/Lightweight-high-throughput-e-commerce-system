@@ -7,8 +7,8 @@ import (
 
 type OrderItem struct {
 	ID        int       `gorm:"primary_key;auto_increment;uniqueIndex"`
-	OrderID   int       `gorm:"not null"` // foreign key of Order
-	ProductID int       `gorm:"not null"` // foreign key of Product
+	OrderID   int       `gorm:"not null;uniqueIndex"` // foreign key of Order
+	ProductID int       `gorm:"not null;uniqueIndex"` // foreign key of Product
 	Quantity  int       `gorm:"not null"`
 	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
@@ -21,7 +21,7 @@ func (order_item *OrderItem) Initialize(name string, quantity int) {
 	order_item.UpdatedAt = time.Now()
 }
 
-func (order_item *OrderItem) SaveOrderItem(db *gorm.DB) (*OrderItem, error) {
+func (order_item *OrderItem) SaveOrderItem() (*OrderItem, error) {
 	err := db.Create(&order_item).Error
 	if err != nil {
 		return &OrderItem{}, err
@@ -29,17 +29,27 @@ func (order_item *OrderItem) SaveOrderItem(db *gorm.DB) (*OrderItem, error) {
 	return order_item, nil
 }
 
-func (order_item *OrderItem) FindAllOrderItemsByID(db *gorm.DB, id int) (*[]OrderItem, error) {
-	order_items := []OrderItem{}
-	err := db.Model(&OrderItem{}).Where("ID = ?", id).Find(&order_items).Error
-	if err != nil {
-		return &[]OrderItem{}, err
+func FindAllOrderItemsByOrderID(orderID int) ([]*OrderItem, error) {
+	orderItems := []*OrderItem{}
+	err := db.Model(&OrderItem{}).Where("OrderID = ?", orderID).Find(&orderItems).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
 	}
 
-	return &order_items, nil
+	return orderItems, nil
 }
 
-func (order_item *OrderItem) DeleteOrderItemByID(db *gorm.DB, id int) (int64, error) {
+func FindAllOrderItemsByProductID(productID int) ([]*OrderItem, error) {
+	orderItems := []*OrderItem{}
+	err := db.Model(&OrderItem{}).Where("ProductID = ?", productID).Find(&orderItems).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return orderItems, nil
+}
+
+func (order_item *OrderItem) DeleteOrderItemByID(id int) (int64, error) {
 	db = db.Model(&OrderItem{}).Where("ID = ?", id).Take(&OrderItem{}).Delete(&OrderItem{})
 	if db.Error != nil {
 		return 0, db.Error

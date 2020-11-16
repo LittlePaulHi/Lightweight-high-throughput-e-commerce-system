@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Cart struct used by Mariadb model
 type Cart struct {
 	ID        int       `gorm:"primary_key;auto_increment;uniqueIndex"`
 	AccountID int       `gorm:"not null;uniqueIndex"` // foreign key of Account
@@ -15,26 +16,32 @@ type Cart struct {
 	DeletedAt gorm.DeletedAt
 }
 
-func (cart *Cart) Initialize(name string, quantity int) {
+// Initialize the cart
+func (cart *Cart) Initialize(accountID int, productID int, quantity int) {
 	cart.ID = 0
+	cart.AccountID = accountID
+	cart.ProductID = productID
 	cart.Quantity = quantity
 	cart.CreatedAt = time.Now()
 	cart.UpdatedAt = time.Now()
 }
 
-func (cart *Cart) SaveCart(db *gorm.DB) (*Cart, error) {
+// SaveCart saves the specified cart
+func (cart *Cart) SaveCart() (*Cart, error) {
 	err := db.Create(&cart).Error
-	if err != nil {
-		return &Cart{}, err
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
 	}
+
 	return cart, nil
 }
 
-func (cart *Cart) UpdateCart(db *gorm.DB) (*Cart, error) {
-	db = db.Model(&Order{}).Where("ID = ?", cart.ID).Take(&Order{}).UpdateColumns(
+// UpdateCart updates the specified cart
+func UpdateCart(cartID int, productID int, quantity int) (*Cart, error) {
+	db = db.Model(&Order{}).Where("ID = ?", cartID).Take(&Order{}).UpdateColumns(
 		map[string]interface{}{
-			"ProductID": cart.ProductID,
-			"Quantity":  cart.Quantity,
+			"ProductID": productID,
+			"Quantity":  quantity,
 			"UpdatedAt": time.Now(),
 		},
 	)
@@ -43,36 +50,39 @@ func (cart *Cart) UpdateCart(db *gorm.DB) (*Cart, error) {
 	}
 
 	// check the updated cart
-	err := db.Model(&Order{}).Where("ID = ?", cart.ID).Take(&cart).Error
-	if err != nil {
-		return &Cart{}, err
+	var cart *Cart
+	err := db.Model(&Order{}).Where("ID = ?", cartID).Take(&cart).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
 	}
 
 	return cart, nil
 }
 
-func (cart *Cart) FindAllCartsByAccountID(db *gorm.DB, account_id int) (*[]Cart, error) {
-	cart_items := []Cart{}
-	err := db.Model(&Cart{}).Where("AccountID = ?", account_id).Find(&cart_items).Error
-	if err != nil {
-		return &[]Cart{}, err
+// FindAllCartsByAccountID finds all the carts by specified account-id
+func FindAllCartsByAccountID(accountID int) ([]*Cart, error) {
+	cartItems := []*Cart{}
+	err := db.Model(&Cart{}).Where("AccountID = ?", accountID).Find(&cartItems).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
 	}
 
-	return &cart_items, nil
+	return cartItems, nil
 }
 
-func (cart *Cart) FindAllCartsByProductID(db *gorm.DB, product_id int) (*[]Cart, error) {
-	cart_items := []Cart{}
-	err := db.Model(&Cart{}).Where("ProductID = ?", product_id).Find(&cart_items).Error
-	if err != nil {
-		return &[]Cart{}, err
+// FindAllCartsByProductID finds all the carts by specified productID
+func FindAllCartsByProductID(productID int) ([]*Cart, error) {
+	cartItems := []*Cart{}
+	err := db.Model(&Cart{}).Where("ProductID = ?", productID).Find(&cartItems).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
 	}
 
-	return &cart_items, nil
+	return cartItems, nil
 }
 
-/* soft delete */
-func (cart *Cart) DeleteCartByID(db *gorm.DB, id int) (int64, error) {
+// DeleteCartByID - soft delete
+func DeleteCartByID(id int) (int64, error) {
 	db = db.Model(&Cart{}).Where("ID = ?", id).Delete(&Cart{})
 	if db.Error != nil {
 		return 0, db.Error
@@ -81,9 +91,9 @@ func (cart *Cart) DeleteCartByID(db *gorm.DB, id int) (int64, error) {
 	return db.RowsAffected, nil
 }
 
-/* soft delete */
-func (cart *Cart) DeleteCartByAccountID(db *gorm.DB, account_id int) (int64, error) {
-	db = db.Model(&Cart{}).Where("AccountID = ?", account_id).Delete(&Cart{})
+// DeleteCartByAccountID - soft delete
+func DeleteCartByAccountID(accountID int) (int64, error) {
+	db = db.Model(&Cart{}).Where("AccountID = ?", accountID).Delete(&Cart{})
 	if db.Error != nil {
 		return 0, db.Error
 	}
@@ -91,9 +101,9 @@ func (cart *Cart) DeleteCartByAccountID(db *gorm.DB, account_id int) (int64, err
 	return db.RowsAffected, nil
 }
 
-/* soft delete */
-func (cart *Cart) DeleteCartByProductID(db *gorm.DB, product_id int) (int64, error) {
-	db = db.Model(&Cart{}).Where("ProductID = ?", product_id).Delete(&Cart{})
+// DeleteCartByProductID - soft delete
+func DeleteCartByProductID(productID int) (int64, error) {
+	db = db.Model(&Cart{}).Where("ProductID = ?", productID).Delete(&Cart{})
 	if db.Error != nil {
 		return 0, db.Error
 	}

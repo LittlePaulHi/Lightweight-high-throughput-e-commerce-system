@@ -1,7 +1,6 @@
 package mariadb
 
 import (
-	"errors"
 	"gorm.io/gorm"
 	"time"
 )
@@ -23,7 +22,7 @@ func (order *Order) Initialize(name string, amount int) {
 	order.UpdatedAt = time.Now()
 }
 
-func (order *Order) SaveOrder(db *gorm.DB) (*Order, error) {
+func (order *Order) SaveOrder() (*Order, error) {
 	err := db.Create(&order).Error
 	if err != nil {
 		return &Order{}, err
@@ -31,7 +30,7 @@ func (order *Order) SaveOrder(db *gorm.DB) (*Order, error) {
 	return order, nil
 }
 
-func (order *Order) UpdateOrder(db *gorm.DB) (*Order, error) {
+func (order *Order) UpdateOrder() (*Order, error) {
 	db = db.Model(&Order{}).Where("ID = ?", order.ID).Take(&Order{}).UpdateColumns(
 		map[string]interface{}{
 			"Amount":    order.Amount,
@@ -52,29 +51,37 @@ func (order *Order) UpdateOrder(db *gorm.DB) (*Order, error) {
 	return order, nil
 }
 
-func (order *Order) FindAllOrders(db *gorm.DB) (*[]Order, error) {
-	orders := []Order{}
+func FindAllOrders() ([]*Order, error) {
+	orders := []*Order{}
 	err := db.Model(&Order{}).Find(&orders).Error
-	if err != nil {
-		return &[]Order{}, err
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
 	}
 
-	return &orders, nil
+	return orders, nil
 }
 
-func (order *Order) FindOrderByID(db *gorm.DB, id int) (*Order, error) {
+func FindOrderByID(id int) (*Order, error) {
+	var order *Order
 	err := db.Model(Order{}).Where("ID = ?", id).Take(&order).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return &Order{}, errors.New("Order Not Found")
-	}
-	if err != nil {
-		return &Order{}, err
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
 	}
 
 	return order, nil
 }
 
-func (order *Order) DeleteOrderByID(db *gorm.DB, id int) (int64, error) {
+func FindAllOrdersByAccountID(accountID int) ([]*Order, error) {
+	var order []*Order
+	err := db.Model(Order{}).Where("AccountID = ?", accountID).Find(&order).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return order, nil
+}
+
+func (order *Order) DeleteOrderByID(id int) (int64, error) {
 	db = db.Model(&Order{}).Where("ID = ?", id).Take(&Order{}).Delete(&Order{})
 	if db.Error != nil {
 		return 0, db.Error
