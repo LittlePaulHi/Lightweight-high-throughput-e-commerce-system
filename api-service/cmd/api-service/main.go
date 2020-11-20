@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 
@@ -49,8 +50,8 @@ func main() {
 	apiServer := &http.Server{
 		Addr:         endPoint,
 		Handler:      ginRouter,
-		ReadTimeout:  readTimeout,
-		WriteTimeout: writeTimeout,
+		ReadTimeout:  readTimeout * time.Second,
+		WriteTimeout: writeTimeout * time.Second,
 	}
 
 	log.Printf("[Info] Start http server, listening on port %s", endPoint)
