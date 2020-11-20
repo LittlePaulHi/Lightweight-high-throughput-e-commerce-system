@@ -13,7 +13,7 @@ type Product struct {
 	Quantity  int       `gorm:"not null"`
 	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-	Deleted   gorm.DeletedAt
+	DeletedAt gorm.DeletedAt
 }
 
 // Initialize the product
