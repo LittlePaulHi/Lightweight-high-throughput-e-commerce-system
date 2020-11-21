@@ -7,7 +7,7 @@ import (
 
 // Cart struct used by Mariadb model
 type Cart struct {
-	ID        int       `gorm:"primary_key;auto_increment;uniqueIndex"`
+	ID        int       `gorm:"primaryKey;autoIncrement;uniqueIndex"`
 	AccountID int       `gorm:"not null;uniqueIndex"` // foreign key of Account
 	ProductID int       `gorm:"not null;uniqueIndex"` // foreign key of Product
 	Quantity  int       `gorm:"not null"`

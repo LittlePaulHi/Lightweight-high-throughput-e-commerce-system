@@ -6,7 +6,7 @@ import (
 )
 
 type Order struct {
-	ID         int         `gorm:"primary_key;auto_increment;uniqueIndex"`
+	ID         int         `gorm:"primaryKey;autoIncrement;uniqueIndex"`
 	AccountID  int         `gorm:"not null;uniqueIndex"` // foreign key of Account
 	Amount     int         `gorm:"not null"`
 	Status     string      `gorm:"type:enum('success', 'fail', 'return');default:'success'"`

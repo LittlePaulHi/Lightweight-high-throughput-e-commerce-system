@@ -6,7 +6,7 @@ import (
 )
 
 type OrderItem struct {
-	ID        int       `gorm:"primary_key;auto_increment;uniqueIndex"`
+	ID        int       `gorm:"primaryKey;autoIncrement;uniqueIndex"`
 	OrderID   int       `gorm:"not null;uniqueIndex"` // foreign key of Order
 	ProductID int       `gorm:"not null;uniqueIndex"` // foreign key of Product
 	Quantity  int       `gorm:"not null"`
