@@ -46,7 +46,9 @@ func Setup() {
 		log.Fatalf("Mariadb Setup error: %v", err)
 	}
 
-	db.AutoMigrate(&Account{}, &Cart{}, &Order{}, &OrderItem{}, &Product{})
+	if err = db.AutoMigrate(&Account{}, &Product{}, &Cart{}, &Order{}, &OrderItem{}); err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
 // CloseMariadb operation will be defer
