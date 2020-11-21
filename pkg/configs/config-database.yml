@@ -1,6 +1,5 @@
 mariadb:
   type: mysql
   user: ppf204
-  password: ${DATABASE_PASSWORD}
   host: 192.168.0.4:3306
   name: ppfinal
