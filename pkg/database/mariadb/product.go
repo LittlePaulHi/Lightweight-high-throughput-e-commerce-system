@@ -7,13 +7,15 @@ import (
 
 // Product struct used by Mariadb model
 type Product struct {
-	ID        int       `gorm:"primary_key;auto_increment;uniqueIndex"`
+	ID        int       `gorm:"primaryKey;autoIncrement;uniqueIndex"`
 	Name      string    `gorm:"size:100;not null;unique"`
 	Price     int       `gorm:"not null"`
 	Quantity  int       `gorm:"not null"`
 	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	DeletedAt gorm.DeletedAt
+	Cart      Cart      `gorm:"ForeignKey:ProductID"`
+	OrderItem OrderItem `gorm:"ForeignKey:ProductID"`
 }
 
 // Initialize the product
