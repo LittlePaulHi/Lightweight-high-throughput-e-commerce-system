@@ -1,20 +1,24 @@
 package mariadb
 
 import (
-	"errors"
 	"gorm.io/gorm"
 	"time"
 )
 
+// Product struct used by Mariadb model
 type Product struct {
-	ID        int       `gorm:"primary_key;auto_increment;uniqueIndex"`
+	ID        int       `gorm:"primaryKey;autoIncrement;uniqueIndex"`
 	Name      string    `gorm:"size:100;not null;unique"`
 	Price     int       `gorm:"not null"`
 	Quantity  int       `gorm:"not null"`
 	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	DeletedAt gorm.DeletedAt
+	Cart      Cart      `gorm:"ForeignKey:ProductID"`
+	OrderItem OrderItem `gorm:"ForeignKey:ProductID"`
 }
 
+// Initialize the product
 func (product *Product) Initialize(name string, price int, quantity int) {
 	product.ID = 0
 	product.Name = name
@@ -24,7 +28,8 @@ func (product *Product) Initialize(name string, price int, quantity int) {
 	product.UpdatedAt = time.Now()
 }
 
-func (product *Product) SaveProduct(db *gorm.DB) (*Product, error) {
+// SaveProduct saves the product
+func (product *Product) SaveProduct() (*Product, error) {
 	err := db.Create(&product).Error
 	if err != nil {
 		return &Product{}, err
@@ -32,7 +37,8 @@ func (product *Product) SaveProduct(db *gorm.DB) (*Product, error) {
 	return product, nil
 }
 
-func (product *Product) UpdateProduct(db *gorm.DB) (*Product, error) {
+// UpdateProduct updates product by the specified ID
+func (product *Product) UpdateProduct() (*Product, error) {
 	db = db.Model(&Product{}).Where("ID = ?", product.ID).Take(&Product{}).UpdateColumns(
 		map[string]interface{}{
 			"Quantity":  product.Quantity,
@@ -52,30 +58,31 @@ func (product *Product) UpdateProduct(db *gorm.DB) (*Product, error) {
 	return product, nil
 }
 
-func (product *Product) FindAllProducts(db *gorm.DB) (*[]Product, error) {
-	products := []Product{}
+// FindAllProducts finds all the products
+func FindAllProducts() ([]*Product, error) {
+	products := []*Product{}
 	err := db.Model(&Product{}).Find(&products).Error
-	if err != nil {
-		return &[]Product{}, err
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
 	}
 
-	return &products, nil
+	return products, nil
 }
 
-func (product *Product) FindProductByID(db *gorm.DB, id int) (*Product, error) {
+// FindProductByID finds a product by the specified ID
+func FindProductByID(id int) (*Product, error) {
+	var product Product
 	err := db.Model(Product{}).Where("ID = ?", id).Take(&product).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return &Product{}, errors.New("Product Not Found")
-	}
-	if err != nil {
-		return &Product{}, err
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
 	}
 
-	return product, nil
+	return &product, nil
 }
 
-func (product *Product) DeleteProductByID(db *gorm.DB, id int) (int64, error) {
-	db = db.Model(&Product{}).Where("ID = ?", id).Take(&Product{}).Delete(&Product{})
+// DeleteProductByID - soft delete
+func DeleteProductByID(id int) (int64, error) {
+	db = db.Model(&Product{}).Where("ID = ?", id).Delete(&Product{})
 	if db.Error != nil {
 		return 0, db.Error
 	}

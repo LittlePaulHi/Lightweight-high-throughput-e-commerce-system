@@ -1,0 +1,5 @@
+server:
+  runMode: debug
+  port: 8000
+  readTimeout: 60
+  writeTimeout: 60
