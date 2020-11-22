@@ -14,19 +14,19 @@ type OrderItem struct {
 	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 }
 
-func (order_item *OrderItem) Initialize(name string, quantity int) {
-	order_item.ID = 0
-	order_item.Quantity = quantity
-	order_item.CreatedAt = time.Now()
-	order_item.UpdatedAt = time.Now()
+func (orderItem *OrderItem) Initialize(quantity int) {
+	orderItem.ID = 0
+	orderItem.Quantity = quantity
+	orderItem.CreatedAt = time.Now()
+	orderItem.UpdatedAt = time.Now()
 }
 
-func (order_item *OrderItem) SaveOrderItem() (*OrderItem, error) {
-	err := db.Create(&order_item).Error
+func (orderItem *OrderItem) SaveOrderItem() (*OrderItem, error) {
+	err := db.Create(&orderItem).Error
 	if err != nil {
 		return &OrderItem{}, err
 	}
-	return order_item, nil
+	return orderItem, nil
 }
 
 func FindAllOrderItemsByOrderID(orderID int) ([]*OrderItem, error) {
@@ -49,7 +49,7 @@ func FindAllOrderItemsByProductID(productID int) ([]*OrderItem, error) {
 	return orderItems, nil
 }
 
-func (order_item *OrderItem) DeleteOrderItemByID(id int) (int64, error) {
+func (orderItem *OrderItem) DeleteOrderItemByID(id int) (int64, error) {
 	db = db.Model(&OrderItem{}).Where("ID = ?", id).Take(&OrderItem{}).Delete(&OrderItem{})
 	if db.Error != nil {
 		return 0, db.Error
