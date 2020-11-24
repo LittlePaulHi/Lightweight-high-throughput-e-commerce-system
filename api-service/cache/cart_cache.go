@@ -4,12 +4,14 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
 	"time"
-	"json"
+	"encoding/json"
+	"strconv"
+	"context"
 )
 
 type CartCache interface {
-	GetAllCartsByAcctID(int) []*mariadb.Cart
-	SetAllCartsByAcctID(int, []*mariadb.Cart)
+	GetAllCartsByAcctID(accID int) []*mariadb.Cart
+	SetAllCartsByAcctID(accID int,carts []*mariadb.Cart)
 	//GetAllCartsByProdID(int) []*mariadb.Cart
 	//SetAllCartsByProdID(int, []*mariadb.Cart)
 }
@@ -36,10 +38,10 @@ func (cache *redisCartCache) getClient() *redis.Client {
 	})
 }
 
-func (cache *redisCartCache) GetAllCartsByAcctID(int accID) []*mariadb.Cart {
+func (cache *redisCartCache) GetAllCartsByAcctID(accID int) []*mariadb.Cart {
 	client := cache.getClient()
 
-	data, err := client.Get(accID).Result()
+	data, err := client.Get(context.Background(), strconv.Itoa(accID)).Result()
 	if err != nil {
 		return nil
 	}
@@ -55,15 +57,15 @@ func (cache *redisCartCache) GetAllCartsByAcctID(int accID) []*mariadb.Cart {
 	return carts
 }
 
-func (cache *redisCartCache) SetAllCartsByAcctID(int accID, value []*mariadb.Cart)  {
+func (cache *redisCartCache) SetAllCartsByAcctID(accID int, carts []*mariadb.Cart)  {
 	client := cache.getClient()
 
-	jsonData, err := json.Marshal(value)
+	jsonData, err := json.Marshal(carts)
 
 	if err != nil {
 		// loge error here
 		return
 	}
 
-	client.Set(accID, jsonData, cache.expires*time.Second)
+	client.Set(context.Background(), strconv.Itoa(accID), jsonData, cache.expires*time.Second)
 }

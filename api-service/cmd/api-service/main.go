@@ -11,8 +11,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 
-	config "api-service/configs"
+	"api-service/config"
 	"api-service/router"
+	"api-service/api"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
 )
 
@@ -25,7 +26,7 @@ func init() {
 	viper.AutomaticEnv()
 	viper.SetConfigName("config-server")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("$PROJECT_PATH/api-service/configs/")
+	viper.AddConfigPath("$PROJECT_PATH/api-service/config/")
 }
 
 func main() {
@@ -46,6 +47,8 @@ func main() {
 	readTimeout := configuration.Server.ReadTimeout
 	writeTimeout := configuration.Server.WriteTimeout
 	endPoint := fmt.Sprintf(":%d", configuration.Server.Port)
+
+	api.InitAllCache(&configuration.Cache)
 
 	apiServer := &http.Server{
 		Addr:         endPoint,
