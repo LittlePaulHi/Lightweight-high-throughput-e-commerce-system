@@ -13,7 +13,7 @@ type OrderCache interface {
 	GetAllOrdersByAcctID(accID int) []*mariadb.Order
 	SetAllOrdersByAcctID(accID int,carts []*mariadb.Order)
 	GetAllOrderItemsByOrderID(orderID int) []*mariadb.OrderItem
-	SetAllOrderItemsByOrderID(orderID int, []*mariadb.OrderItem)
+	SetAllOrderItemsByOrderID(orderID int, items []*mariadb.OrderItem)
 }
 
 type redisOrderCache struct {
@@ -106,6 +106,6 @@ func (cache *redisOrderCache) SetAllOrderItemsByOrderID(orderID int, items []*ma
 		return
 	}
 
-	key := "AllOrderItemsByOrderID" + strconv.Itoa(accID)
+	key := "AllOrderItemsByOrderID" + strconv.Itoa(orderID)
 	client.Set(context.Background(), key, jsonData, cache.expires*time.Second)
 }
