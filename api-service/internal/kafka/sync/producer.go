@@ -3,7 +3,6 @@ package sync
 import (
 	"encoding/json"
 	config "github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/configs"
-	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/kafka/model"
 	"log"
 	"os"
@@ -16,15 +15,12 @@ type Kafka struct {
 	Producer sarama.SyncProducer
 }
 
-func init() {
-	mariadb.Setup()
+func CrateNewSyncProducer() sarama.SyncProducer {
 	viper.AutomaticEnv()
-	viper.SetConfigName("config-kafka")
+	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("$PROJECT_PATH/pkg/configs/")
-}
 
-func CrateNewSyncProducer() sarama.SyncProducer {
 	var configuration config.Configuration
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -40,8 +36,9 @@ func CrateNewSyncProducer() sarama.SyncProducer {
 	sarama.Logger = log.New(os.Stdout, "", log.Ltime)
 
 	sconfig := sarama.NewConfig()
+	sconfig.Producer.Partitioner = sarama.NewRandomPartitioner
 	sconfig.Producer.RequiredAcks = sarama.WaitForAll // Wait for all in-sync replicas to ack the message
-	sconfig.Producer.Retry.Max = 5
+	sconfig.Producer.Retry.Max = 10
 	sconfig.Producer.Return.Successes = true
 
 	producer, err := sarama.NewSyncProducer(configuration.Kafka.BrokerList, sconfig)
@@ -62,12 +59,13 @@ func (kafka *Kafka) Publish(topic string, cartIDs []int) error {
 
 	msg := &sarama.ProducerMessage{
 		Topic: topic,
+		Partition: -1,
 		Value: sarama.ByteEncoder(purchaseMsgBytes),
 	}
 
 	partition, offset, err := kafka.Producer.SendMessage(msg)
 	if err != nil {
-		log.Fatalf("Failed to store your data:, %v\n", err)
+		log.Fatalf("Failed to store your message, %v\n", err)
 		return err
 	}
 	log.Printf("Purchase message is stored with unique identifier important partition: %v, offset: %v\n", partition, offset)
