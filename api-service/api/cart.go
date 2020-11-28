@@ -28,7 +28,7 @@ func GetAllCartsByAccountID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
 	requestBody := cartForm{}
-	err := c.ShouldBind(&requestBody); 
+	err := c.ShouldBind(&requestBody)
 	if err != nil {
 		log.Fatal(err)
 		responseGin.Response(http.StatusBadRequest, nil)
@@ -41,7 +41,7 @@ func GetAllCartsByAccountID(c *gin.Context) {
 	carts := redisCartCache.GetAllCartsByAcctID(accID)
 
 	// cache miss
-	if carts == nil || len(carts) == 0{
+	if carts == nil || len(carts) == 0 {
 		carts, err = service.GetAllCartsByAccountID(accID)
 		if err != nil {
 			responseGin.Response(http.StatusInternalServerError, nil)
@@ -50,7 +50,6 @@ func GetAllCartsByAccountID(c *gin.Context) {
 
 		redisCartCache.SetAllCartsByAcctID(accID, carts)
 	}
-	
 
 	data := make(map[string]interface{})
 	data["cart"] = carts

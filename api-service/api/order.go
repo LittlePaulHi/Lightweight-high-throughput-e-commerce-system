@@ -26,7 +26,7 @@ func GetAllOrdersByAccountID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
 	requestBody := orderForm{}
-	err := c.ShouldBind(&requestBody); 
+	err := c.ShouldBind(&requestBody)
 	if err != nil {
 		log.Fatal(err)
 		responseGin.Response(http.StatusBadRequest, nil)
@@ -76,7 +76,7 @@ func GetAllOrderItemsByOrderID(c *gin.Context) {
 	// access cache first
 	orderItems := redisOrderCache.GetAllOrderItemsByOrderID(orderID)
 
-	//cache miss 
+	//cache miss
 	if orderItems == nil || len(orderItems) == 0 {
 		orderItems, err = service.GetAllOrderItemsByOrderID(orderID)
 		if err != nil {
@@ -84,7 +84,7 @@ func GetAllOrderItemsByOrderID(c *gin.Context) {
 			return
 		}
 
-		redisOrderCache.SetAllOrderItemsByOrderID(orderID, orderItems)		
+		redisOrderCache.SetAllOrderItemsByOrderID(orderID, orderItems)
 	}
 
 	data := make(map[string]interface{})

@@ -32,7 +32,7 @@ func Setup() {
 	db, err = gorm.Open(mysql.New(mysql.Config{
 		DSN: fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
 			configuration.Mariadb.User,
-			configuration.Mariadb.Password,
+			viper.GetString("DATABASE_PASSWORD"),
 			configuration.Mariadb.Host,
 			configuration.Mariadb.Name),
 		DefaultStringSize:         256,

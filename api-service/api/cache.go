@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	redisCartCache cache.CartCache
-	redisOrderCache cache.OrderCache
+	redisCartCache    cache.CartCache
+	redisOrderCache   cache.OrderCache
 	redisProductCache cache.ProductCache
 )
 

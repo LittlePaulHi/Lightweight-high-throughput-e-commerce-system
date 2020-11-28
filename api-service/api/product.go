@@ -15,7 +15,7 @@ import (
 func GetAllProducts(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
-	// access cache first 
+	// access cache first
 	products := redisProductCache.GetAllProducts()
 
 	// cache miss

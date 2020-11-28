@@ -1,17 +1,17 @@
 package cache
 
 import (
+	"context"
+	"encoding/json"
 	"github.com/go-redis/redis/v8"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
-	"time"
-	"encoding/json"
 	"strconv"
-	"context"
+	"time"
 )
 
 type CartCache interface {
 	GetAllCartsByAcctID(accID int) []*mariadb.Cart
-	SetAllCartsByAcctID(accID int,carts []*mariadb.Cart)
+	SetAllCartsByAcctID(accID int, carts []*mariadb.Cart)
 	GetAllCartsByProdID(int) []*mariadb.Cart
 	SetAllCartsByProdID(int, []*mariadb.Cart)
 }
@@ -32,15 +32,14 @@ func NewRedisCartCache(redisHost string, db int, expires time.Duration) CartCach
 
 func (cache *redisCartCache) getClient() *redis.Client {
 	return redis.NewClient(&redis.Options{
-		Addr: cache.redisHost,
+		Addr:     cache.redisHost,
 		Password: "",
-		DB: cache.db,
+		DB:       cache.db,
 	})
 }
 
 func (cache *redisCartCache) GetAllCartsByAcctID(accID int) []*mariadb.Cart {
 	client := cache.getClient()
-
 
 	key := "AllCartsByAcctID" + strconv.Itoa(accID)
 	data, err := client.Get(context.Background(), key).Result()
@@ -62,7 +61,6 @@ func (cache *redisCartCache) GetAllCartsByAcctID(accID int) []*mariadb.Cart {
 func (cache *redisCartCache) GetAllCartsByProdID(prodID int) []*mariadb.Cart {
 	client := cache.getClient()
 
-
 	key := "AllCartsByProdID" + strconv.Itoa(prodID)
 	data, err := client.Get(context.Background(), key).Result()
 	if err != nil {
@@ -80,7 +78,7 @@ func (cache *redisCartCache) GetAllCartsByProdID(prodID int) []*mariadb.Cart {
 	return carts
 }
 
-func (cache *redisCartCache) SetAllCartsByAcctID(accID int, carts []*mariadb.Cart)  {
+func (cache *redisCartCache) SetAllCartsByAcctID(accID int, carts []*mariadb.Cart) {
 	client := cache.getClient()
 
 	jsonData, err := json.Marshal(carts)
@@ -94,8 +92,7 @@ func (cache *redisCartCache) SetAllCartsByAcctID(accID int, carts []*mariadb.Car
 	client.Set(context.Background(), key, jsonData, cache.expires*time.Second)
 }
 
-
-func (cache *redisCartCache) SetAllCartsByProdID(prodID int, carts []*mariadb.Cart)  {
+func (cache *redisCartCache) SetAllCartsByProdID(prodID int, carts []*mariadb.Cart) {
 	client := cache.getClient()
 
 	jsonData, err := json.Marshal(carts)

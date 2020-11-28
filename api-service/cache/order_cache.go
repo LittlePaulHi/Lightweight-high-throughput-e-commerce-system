@@ -1,17 +1,17 @@
 package cache
 
 import (
+	"context"
+	"encoding/json"
 	"github.com/go-redis/redis/v8"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
-	"time"
-	"encoding/json"
 	"strconv"
-	"context"
+	"time"
 )
 
 type OrderCache interface {
 	GetAllOrdersByAcctID(accID int) []*mariadb.Order
-	SetAllOrdersByAcctID(accID int,carts []*mariadb.Order)
+	SetAllOrdersByAcctID(accID int, carts []*mariadb.Order)
 	GetAllOrderItemsByOrderID(orderID int) []*mariadb.OrderItem
 	SetAllOrderItemsByOrderID(orderID int, items []*mariadb.OrderItem)
 }
@@ -32,15 +32,14 @@ func NewRedisOrderCache(redisHost string, db int, expires time.Duration) OrderCa
 
 func (cache *redisOrderCache) getClient() *redis.Client {
 	return redis.NewClient(&redis.Options{
-		Addr: cache.redisHost,
+		Addr:     cache.redisHost,
 		Password: "",
-		DB: cache.db,
+		DB:       cache.db,
 	})
 }
 
 func (cache *redisOrderCache) GetAllOrdersByAcctID(accID int) []*mariadb.Order {
 	client := cache.getClient()
-
 
 	key := "AllOrdersByAcctID" + strconv.Itoa(accID)
 	data, err := client.Get(context.Background(), key).Result()
@@ -60,7 +59,7 @@ func (cache *redisOrderCache) GetAllOrdersByAcctID(accID int) []*mariadb.Order {
 
 }
 
-func (cache *redisOrderCache) SetAllOrdersByAcctID(accID int, orders []*mariadb.Order)  {
+func (cache *redisOrderCache) SetAllOrdersByAcctID(accID int, orders []*mariadb.Order) {
 	client := cache.getClient()
 
 	jsonData, err := json.Marshal(orders)
@@ -74,9 +73,8 @@ func (cache *redisOrderCache) SetAllOrdersByAcctID(accID int, orders []*mariadb.
 	client.Set(context.Background(), key, jsonData, cache.expires*time.Second)
 }
 
-func (cache *redisOrderCache) GetAllOrderItemsByOrderID(orderID int) []*mariadb.OrderItem{
+func (cache *redisOrderCache) GetAllOrderItemsByOrderID(orderID int) []*mariadb.OrderItem {
 	client := cache.getClient()
-
 
 	key := "AllOrderItemsByOrderID" + strconv.Itoa(orderID)
 	data, err := client.Get(context.Background(), key).Result()
