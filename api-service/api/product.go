@@ -15,10 +15,19 @@ import (
 func GetAllProducts(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
-	products, err := service.GetAllProducts()
-	if err != nil {
-		responseGin.Response(http.StatusInternalServerError, nil)
-		return
+	// access cache first
+	products := redisProductCache.GetAllProducts()
+
+	// cache miss
+	if products == nil || len(products) == 0 {
+		var err error
+		products, err = service.GetAllProducts()
+		if err != nil {
+			responseGin.Response(http.StatusInternalServerError, nil)
+			return
+		}
+
+		redisProductCache.SetAllProducts(products)
 	}
 
 	data := make(map[string]interface{})

@@ -9,6 +9,7 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/spec v0.19.13 // indirect
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
+	github.com/go-redis/redis/v8 v8.4.0
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect

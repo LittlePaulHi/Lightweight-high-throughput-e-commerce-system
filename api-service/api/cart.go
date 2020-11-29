@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"api-service/service"
+
 	"github.com/gin-gonic/gin"
 
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
@@ -27,22 +28,31 @@ func GetAllCartsByAccountID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
 	requestBody := cartForm{}
-	if err := c.ShouldBind(&requestBody); err != nil {
+	err := c.ShouldBind(&requestBody)
+	if err != nil {
 		log.Fatal(err)
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
 
-	savedCart, err := service.GetAllCartsByAccountID(
-		requestBody.AccountID,
-	)
-	if err != nil {
-		responseGin.Response(http.StatusInternalServerError, nil)
-		return
+	accID := requestBody.AccountID
+
+	// access cache first
+	carts := redisCartCache.GetAllCartsByAcctID(accID)
+
+	// cache miss
+	if carts == nil || len(carts) == 0 {
+		carts, err = service.GetAllCartsByAccountID(accID)
+		if err != nil {
+			responseGin.Response(http.StatusInternalServerError, nil)
+			return
+		}
+
+		redisCartCache.SetAllCartsByAcctID(accID, carts)
 	}
 
 	data := make(map[string]interface{})
-	data["cart"] = savedCart
+	data["cart"] = carts
 	data["timestamp"] = time.Now()
 
 	responseGin.Response(http.StatusOK, data)
