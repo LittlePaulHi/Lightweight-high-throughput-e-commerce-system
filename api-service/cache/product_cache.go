@@ -67,5 +67,5 @@ func (cache *redisProductCache) SetAllProducts(products []*mariadb.Product) {
 	}
 
 	key := "AllProducts"
-	client.Set(context.Background(), key, jsonData, cache.expires*time.Second)
+	client.Set(context.Background(), key, jsonData, cache.expires*time.Minute)
 }

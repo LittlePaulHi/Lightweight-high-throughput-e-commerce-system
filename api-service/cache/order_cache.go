@@ -70,7 +70,7 @@ func (cache *redisOrderCache) SetAllOrdersByAcctID(accID int, orders []*mariadb.
 	}
 
 	key := "AllOrdersByAcctID" + strconv.Itoa(accID)
-	client.Set(context.Background(), key, jsonData, cache.expires*time.Second)
+	client.Set(context.Background(), key, jsonData, cache.expires*time.Minute)
 }
 
 func (cache *redisOrderCache) GetAllOrderItemsByOrderID(orderID int) []*mariadb.OrderItem {
@@ -105,5 +105,5 @@ func (cache *redisOrderCache) SetAllOrderItemsByOrderID(orderID int, items []*ma
 	}
 
 	key := "AllOrderItemsByOrderID" + strconv.Itoa(orderID)
-	client.Set(context.Background(), key, jsonData, cache.expires*time.Second)
+	client.Set(context.Background(), key, jsonData, cache.expires*time.Minute)
 }

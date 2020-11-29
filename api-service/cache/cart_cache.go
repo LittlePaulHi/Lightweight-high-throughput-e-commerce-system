@@ -89,7 +89,7 @@ func (cache *redisCartCache) SetAllCartsByAcctID(accID int, carts []*mariadb.Car
 	}
 
 	key := "AllCartsByAcctID" + strconv.Itoa(accID)
-	client.Set(context.Background(), key, jsonData, cache.expires*time.Second)
+	client.Set(context.Background(), key, jsonData, cache.expires*time.Minute)
 }
 
 func (cache *redisCartCache) SetAllCartsByProdID(prodID int, carts []*mariadb.Cart) {
@@ -103,5 +103,5 @@ func (cache *redisCartCache) SetAllCartsByProdID(prodID int, carts []*mariadb.Ca
 	}
 
 	key := "AllCartsByProdID" + strconv.Itoa(prodID)
-	client.Set(context.Background(), key, jsonData, cache.expires*time.Second)
+	client.Set(context.Background(), key, jsonData, cache.expires*time.Minute)
 }
