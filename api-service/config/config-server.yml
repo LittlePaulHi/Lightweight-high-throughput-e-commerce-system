@@ -4,8 +4,8 @@ server:
   readTimeout: 60
   writeTimeout: 60
 
-cache-server:
-  host: "192.168.0.3"
+cache:
+  host: "192.168.0.3:6379"
   database: 0
   expires: 30
 
