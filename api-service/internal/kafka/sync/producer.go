@@ -64,9 +64,9 @@ func (kafka *Kafka) Publish(topic string, cartIDs []int) error {
 	}
 
 	msg := &sarama.ProducerMessage{
-		Topic: topic,
+		Topic:     topic,
 		Partition: -1,
-		Value: sarama.ByteEncoder(purchaseMsgBytes),
+		Value:     sarama.ByteEncoder(purchaseMsgBytes),
 	}
 
 	partition, offset, err := kafka.Producer.SendMessage(msg)
