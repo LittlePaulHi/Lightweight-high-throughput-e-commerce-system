@@ -43,7 +43,7 @@ func CrateNewSyncProducer() sarama.SyncProducer {
 
 	producer, err := sarama.NewSyncProducer(configuration.Kafka.BrokerList, sconfig)
 	if err != nil {
-		log.Fatal("Failed to start Sarama SyncProducer:", err)
+		log.Printf("Failed to start Sarama SyncProducer, %v\n", err)
 	}
 
 	return producer

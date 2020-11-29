@@ -18,7 +18,7 @@ func PurchaseFromCarts(c *gin.Context) {
 
 	requestBody := purchaseForm{}
 	if err := c.ShouldBind(&requestBody); err != nil {
-		log.Fatal(err)
+		log.Printf("Bind gin context with specified struct occurs error: %v\n", err)
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
@@ -27,11 +27,12 @@ func PurchaseFromCarts(c *gin.Context) {
 	syncKafka.Producer = sync.CrateNewSyncProducer()
 	defer func() {
 		if err := syncKafka.Close(); err != nil {
-			log.Fatalf("Close kafka producer occurs error: %v", err)
+			log.Printf("Close kafka producer occurs error: %v\n", err)
 		}
 	}()
 
 	if err := syncKafka.Publish(requestBody.Topic, requestBody.CartIDs); err != nil {
-		log.Fatalf("Producer send message error %v", err)
+		log.Printf("Producer send message error %v\n", err)
+		responseGin.Response(http.StatusBadRequest, nil)
 	}
 }
