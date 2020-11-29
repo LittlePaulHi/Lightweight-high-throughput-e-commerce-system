@@ -11,11 +11,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Kafka struct {
-	Producer sarama.SyncProducer
-}
+var brokerList []string
 
-func CrateNewSyncProducer() sarama.SyncProducer {
+func init() {
 	viper.AutomaticEnv()
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
@@ -32,6 +30,14 @@ func CrateNewSyncProducer() sarama.SyncProducer {
 		log.Fatalf("Unable to decode the kafka config into struct, %v", err)
 	}
 
+	brokerList = configuration.Kafka.BrokerList
+}
+
+type Kafka struct {
+	Producer sarama.SyncProducer
+}
+
+func CrateNewSyncProducer() sarama.SyncProducer {
 	// setup log to stdout for debug
 	sarama.Logger = log.New(os.Stdout, "", log.Ltime)
 
@@ -41,7 +47,7 @@ func CrateNewSyncProducer() sarama.SyncProducer {
 	sconfig.Producer.Retry.Max = 10
 	sconfig.Producer.Return.Successes = true
 
-	producer, err := sarama.NewSyncProducer(configuration.Kafka.BrokerList, sconfig)
+	producer, err := sarama.NewSyncProducer(brokerList, sconfig)
 	if err != nil {
 		log.Printf("Failed to start Sarama SyncProducer, %v\n", err)
 	}
