@@ -3,6 +3,7 @@ module api-service
 go 1.15
 
 require (
+	github.com/Shopify/sarama v1.27.2
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect

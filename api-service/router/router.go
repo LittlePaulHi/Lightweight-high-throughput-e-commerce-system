@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/swaggo/gin-swagger"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 
 	"api-service/api"
@@ -32,6 +32,11 @@ func Initialize() *gin.Engine {
 	{
 		orderAPI.GET("/getAllByAccountID", api.GetAllOrdersByAccountID)
 		orderAPI.GET("/getAllItemsByOrderID", api.GetAllOrderItemsByOrderID)
+	}
+
+	purchaseAPI := r.Group("/api/purchase")
+	{
+		purchaseAPI.POST("/sync", api.PurchaseFromCarts)
 	}
 
 	return r

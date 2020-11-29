@@ -2,12 +2,13 @@ package mariadb
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"log"
 
-	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/configs"
+	config "github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/configs"
 )
 
 var db *gorm.DB
@@ -15,9 +16,9 @@ var db *gorm.DB
 // Setup the database instance
 func Setup() {
 	viper.AutomaticEnv()
-	viper.SetConfigName("config-database")
+	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath(viper.GetString("PROJECT_PATH") + "/pkg/configs/")
+	viper.AddConfigPath("$PROJECT_PATH/pkg/configs/")
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("Error when reading config file, %s", err)
