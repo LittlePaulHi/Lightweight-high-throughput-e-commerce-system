@@ -26,18 +26,27 @@ func GetAllOrdersByAccountID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
 	requestBody := orderForm{}
-	if err := c.ShouldBind(&requestBody); err != nil {
+	err := c.ShouldBind(&requestBody)
+	if err != nil {
 		log.Fatal(err)
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
 
-	orders, err := service.GetAllOrdersByAccountID(
-		requestBody.AccountID,
-	)
-	if err != nil {
-		responseGin.Response(http.StatusInternalServerError, nil)
-		return
+	accID := requestBody.AccountID
+
+	//access cache first
+	orders := redisOrderCache.GetAllOrdersByAcctID(accID)
+
+	//cache miss
+	if orders == nil || len(orders) == 0 {
+		orders, err = service.GetAllOrdersByAccountID(accID)
+		if err != nil {
+			responseGin.Response(http.StatusInternalServerError, nil)
+			return
+		}
+
+		redisOrderCache.SetAllOrdersByAcctID(accID, orders)
 	}
 
 	data := make(map[string]interface{})
@@ -56,18 +65,26 @@ func GetAllOrderItemsByOrderID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
 	requestBody := orderItemForm{}
-	if err := c.ShouldBind(&requestBody); err != nil {
+	err := c.ShouldBind(&requestBody)
+	if err != nil {
 		log.Fatal(err)
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
 
-	orderItems, err := service.GetAllOrderItemsByOrderID(
-		requestBody.OrderID,
-	)
-	if err != nil {
-		responseGin.Response(http.StatusInternalServerError, nil)
-		return
+	orderID := requestBody.OrderID
+	// access cache first
+	orderItems := redisOrderCache.GetAllOrderItemsByOrderID(orderID)
+
+	//cache miss
+	if orderItems == nil || len(orderItems) == 0 {
+		orderItems, err = service.GetAllOrderItemsByOrderID(orderID)
+		if err != nil {
+			responseGin.Response(http.StatusInternalServerError, nil)
+			return
+		}
+
+		redisOrderCache.SetAllOrderItemsByOrderID(orderID, orderItems)
 	}
 
 	data := make(map[string]interface{})
