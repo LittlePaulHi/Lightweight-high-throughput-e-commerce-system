@@ -34,9 +34,9 @@ func Initialize() *gin.Engine {
 		orderAPI.GET("/getAllItemsByOrderID", api.GetAllOrderItemsByOrderID)
 	}
 
-	purchaseAPI := r.Group("/api/sync/purchase")
+	purchaseAPI := r.Group("/api/purchase")
 	{
-		purchaseAPI.POST("/", api.PurchaseFromCarts)
+		purchaseAPI.POST("/sync", api.PurchaseFromCarts)
 	}
 
 	return r
