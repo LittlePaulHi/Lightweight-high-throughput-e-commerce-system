@@ -59,7 +59,7 @@ func (kafka *Kafka) Publish(topic string, cartIDs []int) error {
 	purchaseMsg := model.PurchaseMessage{CartIDs: cartIDs}
 	purchaseMsgBytes, err := json.Marshal(purchaseMsg)
 	if err != nil {
-		log.Fatalf("Convert purchase message struct to bytes occurs error: %v\n", err)
+		log.Panicf("Convert purchase message struct to bytes occurs error: %v\n", err)
 		return err
 	}
 
@@ -71,7 +71,7 @@ func (kafka *Kafka) Publish(topic string, cartIDs []int) error {
 
 	partition, offset, err := kafka.Producer.SendMessage(msg)
 	if err != nil {
-		log.Fatalf("Failed to store your message, %v\n", err)
+		log.Panicf("Failed to store your message, %v\n", err)
 		return err
 	}
 	log.Printf("Purchase message is stored with unique identifier important partition: %v, offset: %v\n", partition, offset)
