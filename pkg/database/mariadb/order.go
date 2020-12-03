@@ -1,8 +1,9 @@
 package mariadb
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Order struct {
@@ -15,7 +16,7 @@ type Order struct {
 	OrderItems []OrderItem `gorm:"ForeignKey:OrderID"`
 }
 
-func (order *Order) Initialize(name string, amount int) {
+func (order *Order) Initialize(amount int) {
 	order.ID = 0
 	order.Amount = amount
 	order.CreatedAt = time.Now()
