@@ -1,8 +1,9 @@
 package mariadb
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // Cart struct used by Mariadb model
@@ -57,6 +58,17 @@ func UpdateCart(cartID int, productID int, quantity int) (*Cart, error) {
 	}
 
 	return cart, nil
+}
+
+// FindAllCartsByCardIDs find all the carts by specified CartIDs
+func FindAllCartsByCardIDs(cartIDs []int) ([]*Cart, error) {
+	var cartItems []*Cart
+	err := db.Model(&Cart{}).Where("ID IN ?", cartIDs).Find(&cartItems).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return cartItems, nil
 }
 
 // FindAllCartsByAccountID finds all the carts by specified account-id
