@@ -3,6 +3,7 @@ package main
 import (
 	syncKafka "consumer-service/internal/kafka/sync"
 	kafkaConfig "github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/configs"
+	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
 	"os/signal"
 	"syscall"
 
@@ -30,6 +31,7 @@ const (
 )
 
 func init() {
+	mariadb.Setup()
 	viper.AutomaticEnv()
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
