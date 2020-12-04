@@ -30,7 +30,7 @@ func GetAllCartsByAccountID(c *gin.Context) {
 	requestBody := cartForm{}
 	err := c.ShouldBind(&requestBody)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Bind with cart body occurs error: %v", err)
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
@@ -68,7 +68,7 @@ func AddCart(c *gin.Context) {
 
 	requestBody := cartForm{}
 	if err := c.ShouldBind(&requestBody); err != nil {
-		log.Fatal(err)
+		log.Printf("Bind with cart body occurs error: %v", err)
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
@@ -100,7 +100,7 @@ func EditCart(c *gin.Context) {
 
 	requestBody := cartForm{}
 	if err := c.ShouldBind(&requestBody); err != nil {
-		log.Fatal(err)
+		log.Printf("Bind with cart body occurs error: %v", err)
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
