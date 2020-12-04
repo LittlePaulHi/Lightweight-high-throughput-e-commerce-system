@@ -1,8 +1,9 @@
 package mariadb
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // Product struct used by Mariadb model
@@ -39,18 +40,18 @@ func (product *Product) SaveProduct() (*Product, error) {
 
 // UpdateProduct updates product by the specified ID
 func (product *Product) UpdateProduct() (*Product, error) {
-	db = db.Model(&Product{}).Where("ID = ?", product.ID).Take(&Product{}).UpdateColumns(
+	tx := db.Model(&Product{}).Where("ID = ?", product.ID).Take(&Product{}).UpdateColumns(
 		map[string]interface{}{
 			"Quantity":  product.Quantity,
 			"UpdatedAt": time.Now(),
 		},
 	)
-	if db.Error != nil {
-		return &Product{}, db.Error
+	if tx.Error != nil {
+		return &Product{}, tx.Error
 	}
 
 	// check the updated product
-	err := db.Model(&Product{}).Where("ID = ?", product.ID).Take(&product).Error
+	err := tx.Model(&Product{}).Where("ID = ?", product.ID).Take(&product).Error
 	if err != nil {
 		return &Product{}, err
 	}
@@ -82,10 +83,10 @@ func FindProductByID(id int) (*Product, error) {
 
 // DeleteProductByID - soft delete
 func DeleteProductByID(id int) (int64, error) {
-	db = db.Model(&Product{}).Where("ID = ?", id).Delete(&Product{})
-	if db.Error != nil {
-		return 0, db.Error
+	tx := db.Model(&Product{}).Where("ID = ?", id).Delete(&Product{})
+	if tx.Error != nil {
+		return 0, tx.Error
 	}
 
-	return db.RowsAffected, nil
+	return tx.RowsAffected, nil
 }
