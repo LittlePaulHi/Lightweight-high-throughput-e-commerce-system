@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"api-service/service"
-
+	"api-service/metrics"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/gin-gonic/gin"
 
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
@@ -27,10 +28,17 @@ type cartForm struct {
 func GetAllCartsByAccountID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
+	var httpStatus string 
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+		metrics.GetAllCartsByAccIDLatency.WithLabelValues(httpStatus).Observe(v)
+	}))
+	defer timer.ObserveDuration()
+
 	requestBody := cartForm{}
 	err := c.ShouldBind(&requestBody)
 	if err != nil {
 		log.Printf("Bind with cart body occurs error: %v", err)
+		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
@@ -45,6 +53,7 @@ func GetAllCartsByAccountID(c *gin.Context) {
 		carts, err = service.GetAllCartsByAccountID(accID)
 		if err != nil {
 			responseGin.Response(http.StatusInternalServerError, nil)
+			httpStatus = "InternalServerError"
 			return
 		}
 
@@ -55,6 +64,7 @@ func GetAllCartsByAccountID(c *gin.Context) {
 	data["cart"] = carts
 	data["timestamp"] = time.Now()
 
+	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
 }
 
@@ -66,9 +76,16 @@ func GetAllCartsByAccountID(c *gin.Context) {
 func AddCart(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
+	var httpStatus string 
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+		metrics.AddCartLatency.WithLabelValues(httpStatus).Observe(v)
+	}))
+	defer timer.ObserveDuration()
+
 	requestBody := cartForm{}
 	if err := c.ShouldBind(&requestBody); err != nil {
 		log.Printf("Bind with cart body occurs error: %v", err)
+		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
@@ -80,6 +97,7 @@ func AddCart(c *gin.Context) {
 
 	savedCart, err := service.AddCart(&cart)
 	if err != nil {
+		httpStatus = "InternalServerError"
 		responseGin.Response(http.StatusInternalServerError, nil)
 		return
 	}
@@ -88,6 +106,7 @@ func AddCart(c *gin.Context) {
 	data["cart"] = savedCart
 	data["timestamp"] = time.Now()
 
+	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
 }
 
@@ -97,10 +116,17 @@ func AddCart(c *gin.Context) {
 // @Failure 500
 func EditCart(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
+	
+	var httpStatus string 
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+		metrics.EditCartLatency.WithLabelValues(httpStatus).Observe(v)
+	}))
+	defer timer.ObserveDuration()
 
 	requestBody := cartForm{}
 	if err := c.ShouldBind(&requestBody); err != nil {
 		log.Printf("Bind with cart body occurs error: %v", err)
+		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
@@ -109,6 +135,7 @@ func EditCart(c *gin.Context) {
 		requestBody.CartID, requestBody.AccountID, requestBody.ProductID, requestBody.Quantity,
 	)
 	if err != nil {
+		httpStatus = "InternalServerError"
 		responseGin.Response(http.StatusInternalServerError, nil)
 		return
 	}
@@ -117,5 +144,6 @@ func EditCart(c *gin.Context) {
 	data["carts"] = carts
 	data["timestamp"] = time.Now()
 
+	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
 }

@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
-
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"api-service/api"
 )
 
@@ -38,6 +38,9 @@ func Initialize() *gin.Engine {
 	{
 		purchaseAPI.POST("/sync", api.PurchaseFromCarts)
 	}
+
+	//for promethus
+	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	return r
 }
