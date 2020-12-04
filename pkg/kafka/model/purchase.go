@@ -1,5 +1,7 @@
 package model
 
 type PurchaseMessage struct {
-	CartIDs []int `json:"cartIDs"`
+	RedisChannel string `json:"redisChannel"`
+	AccountID    int    `json:"accountID"`
+	CartIDs      []int  `json:"cartIDs"`
 }
