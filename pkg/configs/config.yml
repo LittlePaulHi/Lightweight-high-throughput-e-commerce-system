@@ -12,3 +12,6 @@ kafka:
   group: syncConsumerGroup
   assignor: roundrobin
   verbose: true
+
+redis:
+  address: 192.168.0.3:6379
