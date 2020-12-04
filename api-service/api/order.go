@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"api-service/metrics"
 	"api-service/service"
 	"github.com/gin-gonic/gin"
 )
@@ -25,10 +26,17 @@ type orderItemForm struct {
 func GetAllOrdersByAccountID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
+	var httpStatus string 
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+		metrics.GetAllOrdersByAccIDLatency.WithLabelValues(httpStatus).Observe(v)
+	}))
+	defer timer.ObserveDuration()
+
 	requestBody := orderForm{}
 	err := c.ShouldBind(&requestBody)
 	if err != nil {
 		log.Fatal(err)
+		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
@@ -42,6 +50,7 @@ func GetAllOrdersByAccountID(c *gin.Context) {
 	if orders == nil || len(orders) == 0 {
 		orders, err = service.GetAllOrdersByAccountID(accID)
 		if err != nil {
+			httpStatus = "InternalServerErro"
 			responseGin.Response(http.StatusInternalServerError, nil)
 			return
 		}
@@ -53,6 +62,7 @@ func GetAllOrdersByAccountID(c *gin.Context) {
 	data["orders"] = orders
 	data["timestamp"] = time.Now()
 
+	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
 }
 
@@ -64,10 +74,17 @@ func GetAllOrdersByAccountID(c *gin.Context) {
 func GetAllOrderItemsByOrderID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
+	var httpStatus string 
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+		metrics.GetAllOrderItemsByOrderIDLatency.WithLabelValues(httpStatus).Observe(v)
+	}))
+	defer timer.ObserveDuration()
+
 	requestBody := orderItemForm{}
 	err := c.ShouldBind(&requestBody)
 	if err != nil {
 		log.Fatal(err)
+		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
@@ -80,6 +97,7 @@ func GetAllOrderItemsByOrderID(c *gin.Context) {
 	if orderItems == nil || len(orderItems) == 0 {
 		orderItems, err = service.GetAllOrderItemsByOrderID(orderID)
 		if err != nil {
+			httpStatus = "InternalServerError"
 			responseGin.Response(http.StatusInternalServerError, nil)
 			return
 		}
@@ -91,5 +109,6 @@ func GetAllOrderItemsByOrderID(c *gin.Context) {
 	data["orderItems"] = orderItems
 	data["timestamp"] = time.Now()
 
+	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
 }
