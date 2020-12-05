@@ -1,12 +1,12 @@
 package api
 
 import (
-	"log"
 	"net/http"
 	"time"
 
 	"api-service/metrics"
 	"api-service/service"
+	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
@@ -37,7 +37,7 @@ func GetAllOrdersByAccountID(c *gin.Context) {
 	requestBody := orderForm{}
 	err := c.ShouldBind(&requestBody)
 	if err != nil {
-		log.Fatal(err)
+		logger.APILog.Warnln(err)
 		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
@@ -85,7 +85,7 @@ func GetAllOrderItemsByOrderID(c *gin.Context) {
 	requestBody := orderItemForm{}
 	err := c.ShouldBind(&requestBody)
 	if err != nil {
-		log.Fatal(err)
+		logger.APILog.Warnln(err)
 		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return

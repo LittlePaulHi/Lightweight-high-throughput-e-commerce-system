@@ -1,12 +1,12 @@
 package api
 
 import (
-	"log"
 	"net/http"
 	"time"
 
 	"api-service/metrics"
 	"api-service/service"
+	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
@@ -38,7 +38,7 @@ func GetAllCartsByAccountID(c *gin.Context) {
 	requestBody := cartForm{}
 	err := c.ShouldBind(&requestBody)
 	if err != nil {
-		log.Printf("Bind with cart body occurs error: %v", err)
+		logger.APILog.Warnln(err)
 		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
@@ -85,7 +85,7 @@ func AddCart(c *gin.Context) {
 
 	requestBody := cartForm{}
 	if err := c.ShouldBind(&requestBody); err != nil {
-		log.Printf("Bind with cart body occurs error: %v", err)
+		logger.APILog.Warnln(err)
 		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
@@ -126,7 +126,7 @@ func EditCart(c *gin.Context) {
 
 	requestBody := cartForm{}
 	if err := c.ShouldBind(&requestBody); err != nil {
-		log.Printf("Bind with cart body occurs error: %v", err)
+		logger.APILog.Warnln(err)
 		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return

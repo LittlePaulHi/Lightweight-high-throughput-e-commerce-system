@@ -20,6 +20,7 @@ require (
 	github.com/swaggo/swag v1.6.9 // indirect
 	github.com/ugorji/go v1.1.13 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
+	github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/logger v0.0.0-00010101000000-000000000000
 	github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg v0.0.0-00010101000000-000000000000
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897 // indirect
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b // indirect
@@ -32,3 +33,5 @@ require (
 )
 
 replace github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg => ../pkg
+
+replace github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/logger => ../logger
