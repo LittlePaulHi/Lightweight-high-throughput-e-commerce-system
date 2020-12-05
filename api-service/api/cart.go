@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"api-service/service"
 	"api-service/metrics"
-	"github.com/prometheus/client_golang/prometheus"
+	"api-service/service"
+
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
 )
@@ -28,7 +29,7 @@ type cartForm struct {
 func GetAllCartsByAccountID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
-	var httpStatus string 
+	var httpStatus string
 	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
 		metrics.GetAllCartsByAccIDLatency.WithLabelValues(httpStatus).Observe(v)
 	}))
@@ -76,7 +77,7 @@ func GetAllCartsByAccountID(c *gin.Context) {
 func AddCart(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
-	var httpStatus string 
+	var httpStatus string
 	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
 		metrics.AddCartLatency.WithLabelValues(httpStatus).Observe(v)
 	}))
@@ -116,8 +117,8 @@ func AddCart(c *gin.Context) {
 // @Failure 500
 func EditCart(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
-	
-	var httpStatus string 
+
+	var httpStatus string
 	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
 		metrics.EditCartLatency.WithLabelValues(httpStatus).Observe(v)
 	}))

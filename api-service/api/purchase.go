@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type purchaseForm struct {
@@ -16,7 +17,7 @@ type purchaseForm struct {
 func PurchaseFromCarts(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
-	var httpStatus string 
+	var httpStatus string
 	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
 		metrics.PurchaseFromCartsLatency.WithLabelValues(httpStatus).Observe(v)
 	}))

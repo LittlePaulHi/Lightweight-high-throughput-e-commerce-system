@@ -13,7 +13,6 @@ var PurchaseFromCartsLatency = prometheus.NewHistogramVec(
 	[]string{"status"},
 )
 
-
 func init() {
 	prometheus.MustRegister(PurchaseFromCartsLatency)
 }

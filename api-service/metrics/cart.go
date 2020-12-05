@@ -15,8 +15,8 @@ var GetAllCartsByAccIDLatency = prometheus.NewHistogramVec(
 
 var AddCartLatency = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
-		Name: "add_cart_duration_seconds", // metric name
-		Help: "Latency of add_cart request in second",
+		Name:    "add_cart_duration_seconds", // metric name
+		Help:    "Latency of add_cart request in second",
 		Buckets: prometheus.LinearBuckets(0.1, 0.1, 10),
 	},
 	[]string{"status"}, // labels
@@ -24,8 +24,8 @@ var AddCartLatency = prometheus.NewHistogramVec(
 
 var EditCartLatency = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
-		Name: "edit_cart_duration_seconds", // metric name
-		Help: "Latency of edit_cart request in second.",
+		Name:    "edit_cart_duration_seconds", // metric name
+		Help:    "Latency of edit_cart request in second.",
 		Buckets: prometheus.LinearBuckets(0.1, 0.1, 10),
 	},
 	[]string{"status"}, // labels

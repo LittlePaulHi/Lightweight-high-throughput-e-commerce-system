@@ -1,11 +1,13 @@
 package api
 
 import (
-	"net/http"
-	"time"
 	"api-service/metrics"
 	"api-service/service"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // GetAllProducts API
@@ -15,7 +17,7 @@ import (
 func GetAllProducts(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
-	var httpStatus string 
+	var httpStatus string
 	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
 		metrics.GetAllProductsLatency.WithLabelValues(httpStatus).Observe(v)
 	}))

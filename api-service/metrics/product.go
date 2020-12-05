@@ -13,7 +13,6 @@ var GetAllProductsLatency = prometheus.NewHistogramVec(
 	[]string{"status"},
 )
 
-
 func init() {
 	prometheus.MustRegister(GetAllProductsLatency)
 }

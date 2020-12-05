@@ -7,7 +7,9 @@ import (
 
 	"api-service/metrics"
 	"api-service/service"
+
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type orderForm struct {
@@ -26,7 +28,7 @@ type orderItemForm struct {
 func GetAllOrdersByAccountID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
-	var httpStatus string 
+	var httpStatus string
 	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
 		metrics.GetAllOrdersByAccIDLatency.WithLabelValues(httpStatus).Observe(v)
 	}))
@@ -74,7 +76,7 @@ func GetAllOrdersByAccountID(c *gin.Context) {
 func GetAllOrderItemsByOrderID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
-	var httpStatus string 
+	var httpStatus string
 	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
 		metrics.GetAllOrderItemsByOrderIDLatency.WithLabelValues(httpStatus).Observe(v)
 	}))

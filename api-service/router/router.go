@@ -2,10 +2,12 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+
+	"api-service/api"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"api-service/api"
 )
 
 // Initialize the gin router
