@@ -2,6 +2,7 @@ package api
 
 import (
 	"api-service/internal/kafka/sync"
+	"api-service/metrics"
 	"log"
 	"net/http"
 

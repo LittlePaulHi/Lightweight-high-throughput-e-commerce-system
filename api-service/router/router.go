@@ -42,7 +42,7 @@ func Initialize() *gin.Engine {
 	}
 
 	//for promethus
-	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	return r
 }

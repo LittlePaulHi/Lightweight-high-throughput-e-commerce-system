@@ -24,5 +24,5 @@ var GetAllOrderItemsByOrderIDLatency = prometheus.NewHistogramVec(
 
 func init() {
 	prometheus.MustRegister(GetAllOrdersByAccIDLatency)
-	prometheus.MustRegister(GetAllOrderItemsByOrderID)
+	prometheus.MustRegister(GetAllOrderItemsByOrderIDLatency)
 }
