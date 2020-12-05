@@ -1,0 +1,21 @@
+version: '2'
+
+services:
+
+  mariadbdb:
+    image: mariadb
+    restart: always
+    ports:
+    - 3306:3306
+    volumes:
+    - ./my.cnf:/etc/mysql/conf.d/my.cnf
+    - /data/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ROOT_PASSWORD:-admin}
+
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+    - 8080:8080
