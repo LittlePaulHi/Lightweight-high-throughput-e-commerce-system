@@ -9,8 +9,8 @@ import (
 )
 
 type purchaseForm struct {
-	Topic   string `json:"topic" binding:"required"`
-	CartIDs []int  `json:"cartIDs" binding:"required"`
+	AccountID int   `json:"accountID" binding:"required"`
+	CartIDs   []int `json:"cartIDs" binding:"required"`
 }
 
 func PurchaseFromCarts(c *gin.Context) {
@@ -31,8 +31,11 @@ func PurchaseFromCarts(c *gin.Context) {
 		}
 	}()
 
-	if err := syncKafka.Publish(requestBody.Topic, requestBody.CartIDs); err != nil {
+	payload, err := syncKafka.PublishBuyEvent(requestBody.AccountID, requestBody.CartIDs)
+	if err != nil {
 		log.Printf("Producer send message error %v\n", err)
 		responseGin.Response(http.StatusBadRequest, nil)
 	}
+
+	responseGin.Response(http.StatusOK, payload)
 }

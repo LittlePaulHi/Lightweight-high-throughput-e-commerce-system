@@ -4,16 +4,26 @@ import (
 	"encoding/json"
 	config "github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/configs"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/kafka/model"
+	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/redis"
 	"log"
+	"math/rand"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/spf13/viper"
 )
 
-var brokerList []string
+var (
+	redisClient redis.Redis
+	topics      []string
+	brokerList  []string
+)
 
 func init() {
+	redisClient.Initialize()
+
 	viper.AutomaticEnv()
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
@@ -31,6 +41,7 @@ func init() {
 	}
 
 	brokerList = configuration.Kafka.BrokerList
+	topics = configuration.Kafka.Topics
 }
 
 type Kafka struct {
@@ -55,28 +66,40 @@ func CrateNewSyncProducer() sarama.SyncProducer {
 	return producer
 }
 
-func (kafka *Kafka) Publish(topic string, cartIDs []int) error {
-	purchaseMsg := model.PurchaseMessage{CartIDs: cartIDs}
+func (kafka *Kafka) PublishBuyEvent(accountID int, cartIDs []int) (string, error) {
+	rand.Seed(time.Now().UnixNano())
+	purchaseMsg := model.PurchaseMessage{
+		RedisChannel: strconv.Itoa(accountID) + "." + time.Now().String() + "." + strconv.Itoa(rand.Int()),
+		AccountID:    accountID,
+		CartIDs:      cartIDs,
+	}
 	purchaseMsgBytes, err := json.Marshal(purchaseMsg)
 	if err != nil {
-		log.Fatalf("Convert purchase message struct to bytes occurs error: %v\n", err)
-		return err
+		log.Panicf("Convert purchase message struct to bytes occurs error: %v\n", err)
+		return "", err
 	}
 
 	msg := &sarama.ProducerMessage{
-		Topic:     topic,
+		Topic:     topics[0],
 		Partition: -1,
 		Value:     sarama.ByteEncoder(purchaseMsgBytes),
 	}
 
 	partition, offset, err := kafka.Producer.SendMessage(msg)
 	if err != nil {
-		log.Fatalf("Failed to store your message, %v\n", err)
-		return err
+		log.Panicf("Failed to store your message, %v\n", err)
+		return "", err
 	}
-	log.Printf("Purchase message is stored with unique identifier important partition: %v, offset: %v\n", partition, offset)
+	log.Printf("Purchase message is stored with unique identifier important partition: %v, offset: %  v\n", partition, offset)
 
-	return nil
+	payload, err := redisClient.SubscribeAndReceive(purchaseMsg.RedisChannel)
+	if err != nil {
+		// TODO: query database instead
+		log.Panicf("SubscribeAndReceive the result of buy event occurs error, %v", err)
+		return "", err
+	}
+
+	return payload, nil
 }
 
 func (kafka *Kafka) Close() error {

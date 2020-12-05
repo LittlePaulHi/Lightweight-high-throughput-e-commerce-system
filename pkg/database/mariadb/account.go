@@ -2,6 +2,7 @@ package mariadb
 
 import (
 	"errors"
+
 	"gorm.io/gorm"
 )
 
@@ -29,17 +30,17 @@ func (account *Account) SaveAccount() (*Account, error) {
 }
 
 func (account *Account) UpdateAccount(id int) (*Account, error) {
-	db = db.Model(&Account{}).Where("ID = ?", id).Take(&Account{}).UpdateColumns(
+	tx := db.Model(&Account{}).Where("ID = ?", id).Take(&Account{}).UpdateColumns(
 		map[string]interface{}{
 			"Amount": account.Amount,
 		},
 	)
-	if db.Error != nil {
-		return &Account{}, db.Error
+	if tx.Error != nil {
+		return &Account{}, tx.Error
 	}
 
 	// check the updated account
-	err := db.Model(&Account{}).Where("ID = ?", id).Take(&account).Error
+	err := tx.Model(&Account{}).Where("ID = ?", id).Take(&account).Error
 	if err != nil {
 		return &Account{}, err
 	}
@@ -60,10 +61,10 @@ func (account *Account) FindAccountByID(id int) (*Account, error) {
 }
 
 func (account *Account) DeleteAccount(id int) (int64, error) {
-	db = db.Model(&Account{}).Where("ID = ?", id).Take(&Account{}).Delete(&Account{})
-	if db.Error != nil {
-		return 0, db.Error
+	tx := db.Model(&Account{}).Where("ID = ?", id).Take(&Account{}).Delete(&Account{})
+	if tx.Error != nil {
+		return 0, tx.Error
 	}
 
-	return db.RowsAffected, nil
+	return tx.RowsAffected, nil
 }

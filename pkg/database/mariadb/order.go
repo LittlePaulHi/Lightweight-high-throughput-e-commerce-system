@@ -1,22 +1,24 @@
 package mariadb
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Order struct {
-	ID         int         `gorm:"primaryKey;autoIncrement;uniqueIndex"`
-	AccountID  int         `gorm:"not null;uniqueIndex"` // foreign key of Account
-	Amount     int         `gorm:"not null"`
-	Status     string      `gorm:"type:enum('success', 'fail', 'return');default:'success'"`
-	CreatedAt  time.Time   `gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt  time.Time   `gorm:"default:CURRENT_TIMESTAMP"`
-	OrderItems []OrderItem `gorm:"ForeignKey:OrderID"`
+	ID        int       `gorm:"primaryKey;autoIncrement;uniqueIndex"`
+	AccountID int       `gorm:"not null;index"` // foreign key of Account
+	Amount    int       `gorm:"not null"`
+	Status    string    `gorm:"type:enum('success', 'fail', 'return');default:'success'"`
+	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	OrderItem OrderItem `gorm:"ForeignKey:OrderID"`
 }
 
-func (order *Order) Initialize(name string, amount int) {
+func (order *Order) Initialize(accountID int, amount int) {
 	order.ID = 0
+	order.AccountID = accountID
 	order.Amount = amount
 	order.CreatedAt = time.Now()
 	order.UpdatedAt = time.Now()
@@ -31,19 +33,19 @@ func (order *Order) SaveOrder() (*Order, error) {
 }
 
 func (order *Order) UpdateOrder() (*Order, error) {
-	db = db.Model(&Order{}).Where("ID = ?", order.ID).Take(&Order{}).UpdateColumns(
+	tx := db.Model(&Order{}).Where("ID = ?", order.ID).Take(&Order{}).UpdateColumns(
 		map[string]interface{}{
 			"Amount":    order.Amount,
 			"Status":    order.Status,
 			"UpdatedAt": time.Now(),
 		},
 	)
-	if db.Error != nil {
-		return &Order{}, db.Error
+	if tx.Error != nil {
+		return &Order{}, tx.Error
 	}
 
 	// check the updated order
-	err := db.Model(&Order{}).Where("ID = ?", order.ID).Take(&order).Error
+	err := tx.Model(&Order{}).Where("ID = ?", order.ID).Take(&order).Error
 	if err != nil {
 		return &Order{}, err
 	}
@@ -52,7 +54,7 @@ func (order *Order) UpdateOrder() (*Order, error) {
 }
 
 func FindAllOrders() ([]*Order, error) {
-	orders := []*Order{}
+	var orders []*Order
 	err := db.Model(&Order{}).Find(&orders).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
@@ -73,7 +75,7 @@ func FindOrderByID(id int) (*Order, error) {
 
 func FindAllOrdersByAccountID(accountID int) ([]*Order, error) {
 	var order []*Order
-	err := db.Model(Order{}).Where("AccountID = ?", accountID).Find(&order).Error
+	err := db.Table("orders").Model(Order{}).Where("AccountID = ?", accountID).Find(&order).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -82,10 +84,10 @@ func FindAllOrdersByAccountID(accountID int) ([]*Order, error) {
 }
 
 func (order *Order) DeleteOrderByID(id int) (int64, error) {
-	db = db.Model(&Order{}).Where("ID = ?", id).Take(&Order{}).Delete(&Order{})
-	if db.Error != nil {
-		return 0, db.Error
+	tx := db.Table("orders").Model(&Order{}).Where("ID = ?", id).Take(&Order{}).Delete(&Order{})
+	if tx.Error != nil {
+		return 0, tx.Error
 	}
 
-	return db.RowsAffected, nil
+	return tx.RowsAffected, nil
 }
