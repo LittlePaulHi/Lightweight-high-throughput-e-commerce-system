@@ -46,7 +46,7 @@ func main() {
 	ginRouter := router.Initialize()
 	readTimeout := configuration.Server.ReadTimeout
 	writeTimeout := configuration.Server.WriteTimeout
-	endPoint := fmt.Sprintf(":%d", configuration.Server.Port)
+	endPoint := fmt.Sprintf("%s:%d", configuration.Server.Addr, configuration.Server.Port)
 
 	api.InitAllCache(&configuration.Cache)
 

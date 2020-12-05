@@ -13,6 +13,7 @@ type Configuration struct {
 // ServerConfiguration represent configs for gin-server
 type ServerConfiguration struct {
 	RunMode      string
+	Addr         string
 	Port         int
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
