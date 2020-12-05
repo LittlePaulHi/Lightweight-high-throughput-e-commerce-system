@@ -1,12 +1,12 @@
 package api
 
 import (
-	"net/http"
-	"time"
-
 	"api-service/metrics"
 	"api-service/service"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/logger"
+	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
@@ -35,26 +35,30 @@ func GetAllCartsByAccountID(c *gin.Context) {
 	}))
 	defer timer.ObserveDuration()
 
-	requestBody := cartForm{}
-	err := c.ShouldBind(&requestBody)
-	if err != nil {
-		logger.APILog.Warnln(err)
+	accIDStr := c.Query("AccountID")
+	if accIDStr == "" {
+		logger.APILog.Warnln("AccountID shouldn't be empty in GetAllCartsByAccountID")
 		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
 
-	accID := requestBody.AccountID
+	accID, err := strconv.Atoi(accIDStr)
+	if err != nil {
+		logger.APILog.Warnln("GetAllCartsByAccountID: ", err)
+		httpStatus = "InternalServerError"
+		responseGin.Response(http.StatusInternalServerError, nil)
+		return
+	}
 
 	// access cache first
 	carts := redisCartCache.GetAllCartsByAcctID(accID)
-
 	// cache miss
 	if carts == nil || len(carts) == 0 {
 		carts, err = service.GetAllCartsByAccountID(accID)
 		if err != nil {
-			responseGin.Response(http.StatusInternalServerError, nil)
 			httpStatus = "InternalServerError"
+			responseGin.Response(http.StatusInternalServerError, nil)
 			return
 		}
 
