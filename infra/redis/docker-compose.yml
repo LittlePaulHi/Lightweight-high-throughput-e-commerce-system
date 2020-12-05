@@ -1,0 +1,23 @@
+version: '2'
+
+services:
+
+  phpredisadmin:
+    image: erikdubbelboer/phpredisadmin
+    environment:
+    - ADMIN_USER=${ADMIN_USER:-admin}
+    - ADMIN_PASS=${ADMIN_PASSWORD:-admin}
+    - REDIS_1_HOST=redis
+    - REDIS_1_PORT=6379
+    links:
+    - redis
+    ports:
+    - "8080:80"
+
+  redis:
+    image: redis
+    ports:
+    - 6379:6379
+    volumes:
+    - /data:/data
+    command: --loglevel verbose --appendonly yes
