@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"log"
 	"net/http"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"api-service/config"
 	"api-service/router"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
+	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/logger"
 )
 
 var (
@@ -33,12 +35,12 @@ func main() {
 	var configuration config.Configuration
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error when reading config file, %s", err)
+		logger.InitLog.Errorf("Error when reading config file, %s", err)
 	}
 
 	err := viper.Unmarshal(&configuration)
 	if err != nil {
-		log.Fatalf("Unable to decode into struct, %v", err)
+		logger.InitLog.Errorf("Unable to decode into struct, %v", err)
 	}
 
 	gin.SetMode(configuration.Server.RunMode)
@@ -46,7 +48,7 @@ func main() {
 	ginRouter := router.Initialize()
 	readTimeout := configuration.Server.ReadTimeout
 	writeTimeout := configuration.Server.WriteTimeout
-	endPoint := fmt.Sprintf(":%d", configuration.Server.Port)
+	endPoint := fmt.Sprintf("%s:%d", configuration.Server.Addr, configuration.Server.Port)
 
 	api.InitAllCache(&configuration.Cache)
 
@@ -64,6 +66,6 @@ func main() {
 	})
 
 	if err := eg.Wait(); err != nil {
-		log.Fatal(err)
+		logger.InitLog.Warnln("EG Wait error: ", err)
 	}
 }

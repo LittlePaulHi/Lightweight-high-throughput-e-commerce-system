@@ -1,49 +1,55 @@
 package api
 
 import (
-	"log"
+	"api-service/metrics"
+	"api-service/service"
+	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/logger"
 	"net/http"
 	"time"
 
-	"api-service/service"
-
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
 )
-
-type cartForm struct {
-	CartID    int `json:"cartID" binding:"required"`
-	AccountID int `json:"accountID" binding:"required"`
-	ProductID int `json:"productID" binding:"required"`
-	Quantity  int `json:"quantity" binding:"required"`
-}
 
 // GetAllCartsByAccountID API
 // @Param {body: { cartID, accountID, productID }}
 // @Router /api/cart/getAllByAccountID [GET]
 // @Success 200
 // @Failure 500
+
+type GetAllCartsByAccountIDRequestHeader struct {
+	AccountID int `header:"accountID" binding:"required"`
+}
+
 func GetAllCartsByAccountID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
-	requestBody := cartForm{}
-	err := c.ShouldBind(&requestBody)
+	var httpStatus string
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+		metrics.GetAllCartsByAccIDLatency.WithLabelValues(httpStatus).Observe(v)
+	}))
+	defer timer.ObserveDuration()
+
+	requestHeader := GetAllCartsByAccountIDRequestHeader{}
+	err := c.ShouldBindHeader(&requestHeader)
 	if err != nil {
-		log.Printf("Bind with cart body occurs error: %v", err)
+		logger.APILog.Warnln(err)
+		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
 
-	accID := requestBody.AccountID
+	accID := requestHeader.AccountID
 
 	// access cache first
 	carts := redisCartCache.GetAllCartsByAcctID(accID)
-
 	// cache miss
 	if carts == nil || len(carts) == 0 {
 		carts, err = service.GetAllCartsByAccountID(accID)
 		if err != nil {
+			httpStatus = "InternalServerError"
 			responseGin.Response(http.StatusInternalServerError, nil)
 			return
 		}
@@ -55,6 +61,7 @@ func GetAllCartsByAccountID(c *gin.Context) {
 	data["cart"] = carts
 	data["timestamp"] = time.Now()
 
+	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
 }
 
@@ -63,12 +70,27 @@ func GetAllCartsByAccountID(c *gin.Context) {
 // @Router /api/cart/addCart [POST]
 // @Success 200
 // @Failure 500
+
+type AddCartRequestBody struct {
+	AccountID int `header:"accountID" binding:"required"`
+	ProductID int `header:"productID" binding:"required"`
+	Quantity  int `header:"quantity" binding:"required"`
+}
+
 func AddCart(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
-	requestBody := cartForm{}
-	if err := c.ShouldBind(&requestBody); err != nil {
-		log.Printf("Bind with cart body occurs error: %v", err)
+	var httpStatus string
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+		metrics.AddCartLatency.WithLabelValues(httpStatus).Observe(v)
+	}))
+	defer timer.ObserveDuration()
+
+	requestBody := AddCartRequestBody{}
+	err := c.ShouldBind(&requestBody)
+	if err != nil {
+		logger.APILog.Warnln(err)
+		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
@@ -80,6 +102,7 @@ func AddCart(c *gin.Context) {
 
 	savedCart, err := service.AddCart(&cart)
 	if err != nil {
+		httpStatus = "InternalServerError"
 		responseGin.Response(http.StatusInternalServerError, nil)
 		return
 	}
@@ -88,6 +111,7 @@ func AddCart(c *gin.Context) {
 	data["cart"] = savedCart
 	data["timestamp"] = time.Now()
 
+	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
 }
 
@@ -95,12 +119,28 @@ func AddCart(c *gin.Context) {
 // @Router /api/cart/editCart [POST]
 // @Success 200
 // @Failure 500
+
+type EditCartRequestBody struct {
+	CartID    int `header:"cartID" binding:"required"`
+	AccountID int `header:"accountID" binding:"required"`
+	ProductID int `header:"productID" binding:"required"`
+	Quantity  int `header:"quantity" binding:"required"`
+}
+
 func EditCart(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
-	requestBody := cartForm{}
-	if err := c.ShouldBind(&requestBody); err != nil {
-		log.Printf("Bind with cart body occurs error: %v", err)
+	var httpStatus string
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+		metrics.EditCartLatency.WithLabelValues(httpStatus).Observe(v)
+	}))
+	defer timer.ObserveDuration()
+
+	requestBody := EditCartRequestBody{}
+	err := c.ShouldBind(&requestBody)
+	if err != nil {
+		logger.APILog.Warnln(err)
+		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
@@ -109,6 +149,7 @@ func EditCart(c *gin.Context) {
 		requestBody.CartID, requestBody.AccountID, requestBody.ProductID, requestBody.Quantity,
 	)
 	if err != nil {
+		httpStatus = "InternalServerError"
 		responseGin.Response(http.StatusInternalServerError, nil)
 		return
 	}
@@ -117,5 +158,6 @@ func EditCart(c *gin.Context) {
 	data["carts"] = carts
 	data["timestamp"] = time.Now()
 
+	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
 }

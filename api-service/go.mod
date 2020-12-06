@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/Shopify/sarama v1.27.2
+	github.com/antonfisher/nested-logrus-formatter v1.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
@@ -13,6 +14,7 @@ require (
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
+	github.com/prometheus/client_golang v0.9.3
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/swaggo/gin-swagger v1.2.0
