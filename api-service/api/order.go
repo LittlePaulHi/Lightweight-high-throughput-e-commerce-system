@@ -12,19 +12,16 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type orderForm struct {
-	AccountID int `json:"accountID" binding:"required"`
-}
-
-type orderItemForm struct {
-	OrderID int `json:"orderID" binding:"required"`
-}
-
 // GetAllOrdersByAccountID API
 // @Param {body: { accountID, orderID }}
 // @Router /api/order/getAllByAccountID [GET]
 // @Success 200
 // @Failure 500
+
+type GetAllOrdersByAccountIDRequestHeader struct {
+	AccountID int `header:"accountID" binding:"required"`
+}
+
 func GetAllOrdersByAccountID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
@@ -34,8 +31,8 @@ func GetAllOrdersByAccountID(c *gin.Context) {
 	}))
 	defer timer.ObserveDuration()
 
-	requestBody := orderForm{}
-	err := c.ShouldBind(&requestBody)
+	requestHeader := GetAllOrdersByAccountIDRequestHeader{}
+	err := c.ShouldBindHeader(&requestHeader)
 	if err != nil {
 		logger.APILog.Warnln(err)
 		httpStatus = "BadRequest"
@@ -43,7 +40,7 @@ func GetAllOrdersByAccountID(c *gin.Context) {
 		return
 	}
 
-	accID := requestBody.AccountID
+	accID := requestHeader.AccountID
 
 	//access cache first
 	orders := redisOrderCache.GetAllOrdersByAcctID(accID)
@@ -73,6 +70,11 @@ func GetAllOrdersByAccountID(c *gin.Context) {
 // @Router /api/order/getAllOrderItems [GET]
 // @Success 200
 // @Failure 500
+
+type GetAllOrderItemsByOrderIDRequestHeader struct {
+	OrderID int `header:"orderID" binding:"required"`
+}
+
 func GetAllOrderItemsByOrderID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
@@ -82,8 +84,8 @@ func GetAllOrderItemsByOrderID(c *gin.Context) {
 	}))
 	defer timer.ObserveDuration()
 
-	requestBody := orderItemForm{}
-	err := c.ShouldBind(&requestBody)
+	requestHeader := GetAllOrderItemsByOrderIDRequestHeader{}
+	err := c.ShouldBindHeader(&requestHeader)
 	if err != nil {
 		logger.APILog.Warnln(err)
 		httpStatus = "BadRequest"
@@ -91,7 +93,7 @@ func GetAllOrderItemsByOrderID(c *gin.Context) {
 		return
 	}
 
-	orderID := requestBody.OrderID
+	orderID := requestHeader.OrderID
 	// access cache first
 	orderItems := redisOrderCache.GetAllOrderItemsByOrderID(orderID)
 

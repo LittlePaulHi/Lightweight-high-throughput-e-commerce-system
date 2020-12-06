@@ -5,7 +5,6 @@ import (
 	"api-service/service"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/logger"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,18 +13,16 @@ import (
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
 )
 
-type cartForm struct {
-	CartID    int `json:"cartID" binding:"required"`
-	AccountID int `json:"accountID" binding:"required"`
-	ProductID int `json:"productID" binding:"required"`
-	Quantity  int `json:"quantity" binding:"required"`
-}
-
 // GetAllCartsByAccountID API
 // @Param {body: { cartID, accountID, productID }}
 // @Router /api/cart/getAllByAccountID [GET]
 // @Success 200
 // @Failure 500
+
+type GetAllCartsByAccountIDRequestHeader struct {
+	AccountID int `header:"accountID" binding:"required"`
+}
+
 func GetAllCartsByAccountID(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
@@ -35,21 +32,16 @@ func GetAllCartsByAccountID(c *gin.Context) {
 	}))
 	defer timer.ObserveDuration()
 
-	accIDStr := c.Query("AccountID")
-	if accIDStr == "" {
-		logger.APILog.Warnln("AccountID shouldn't be empty in GetAllCartsByAccountID")
+	requestHeader := GetAllCartsByAccountIDRequestHeader{}
+	err := c.ShouldBindHeader(&requestHeader)
+	if err != nil {
+		logger.APILog.Warnln(err)
 		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
 
-	accID, err := strconv.Atoi(accIDStr)
-	if err != nil {
-		logger.APILog.Warnln("GetAllCartsByAccountID: ", err)
-		httpStatus = "InternalServerError"
-		responseGin.Response(http.StatusInternalServerError, nil)
-		return
-	}
+	accID := requestHeader.AccountID
 
 	// access cache first
 	carts := redisCartCache.GetAllCartsByAcctID(accID)
@@ -78,6 +70,13 @@ func GetAllCartsByAccountID(c *gin.Context) {
 // @Router /api/cart/addCart [POST]
 // @Success 200
 // @Failure 500
+
+type AddCartRequestBody struct {
+	AccountID int `header:"accountID" binding:"required"`
+	ProductID int `header:"productID" binding:"required"`
+	Quantity  int `header:"quantity" binding:"required"`
+}
+
 func AddCart(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
@@ -87,8 +86,9 @@ func AddCart(c *gin.Context) {
 	}))
 	defer timer.ObserveDuration()
 
-	requestBody := cartForm{}
-	if err := c.ShouldBind(&requestBody); err != nil {
+	requestBody := AddCartRequestBody{}
+	err := c.ShouldBind(&requestBody)
+	if err != nil {
 		logger.APILog.Warnln(err)
 		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
@@ -119,6 +119,14 @@ func AddCart(c *gin.Context) {
 // @Router /api/cart/editCart [POST]
 // @Success 200
 // @Failure 500
+
+type EditCartRequestBody struct {
+	CartID    int `header:"cartID" binding:"required"`
+	AccountID int `header:"accountID" binding:"required"`
+	ProductID int `header:"productID" binding:"required"`
+	Quantity  int `header:"quantity" binding:"required"`
+}
+
 func EditCart(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
@@ -128,8 +136,9 @@ func EditCart(c *gin.Context) {
 	}))
 	defer timer.ObserveDuration()
 
-	requestBody := cartForm{}
-	if err := c.ShouldBind(&requestBody); err != nil {
+	requestBody := EditCartRequestBody{}
+	err := c.ShouldBind(&requestBody)
+	if err != nil {
 		logger.APILog.Warnln(err)
 		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
