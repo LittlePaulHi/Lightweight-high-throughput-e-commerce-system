@@ -12,8 +12,8 @@ import (
 )
 
 type PurchaseFromCartsRequestBody struct {
-	AccountID int   `header:"accountID" binding:"required"`
-	CartIDs   []int `header:"cartIDs" binding:"required"`
+	AccountID int   `json:"accountID" binding:"required"`
+	CartIDs   []int `json:"cartIDs" binding:"required"`
 }
 
 func PurchaseFromCarts(c *gin.Context) {

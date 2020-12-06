@@ -72,9 +72,9 @@ func GetAllCartsByAccountID(c *gin.Context) {
 // @Failure 500
 
 type AddCartRequestBody struct {
-	AccountID int `header:"accountID" binding:"required"`
-	ProductID int `header:"productID" binding:"required"`
-	Quantity  int `header:"quantity" binding:"required"`
+	AccountID int `json:"accountID" binding:"required"`
+	ProductID int `json:"productID" binding:"required"`
+	Quantity  int `json:"quantity" binding:"required"`
 }
 
 func AddCart(c *gin.Context) {
@@ -121,10 +121,10 @@ func AddCart(c *gin.Context) {
 // @Failure 500
 
 type EditCartRequestBody struct {
-	CartID    int `header:"cartID" binding:"required"`
-	AccountID int `header:"accountID" binding:"required"`
-	ProductID int `header:"productID" binding:"required"`
-	Quantity  int `header:"quantity" binding:"required"`
+	CartID    int `json:"cartID" binding:"required"`
+	AccountID int `json:"accountID" binding:"required"`
+	ProductID int `json:"productID" binding:"required"`
+	Quantity  int `json:"quantity" binding:"required"`
 }
 
 func EditCart(c *gin.Context) {
