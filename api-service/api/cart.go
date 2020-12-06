@@ -3,7 +3,7 @@ package api
 import (
 	"api-service/metrics"
 	"api-service/service"
-	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/logger"
+	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/logger"
 	"net/http"
 	"strconv"
 	"time"

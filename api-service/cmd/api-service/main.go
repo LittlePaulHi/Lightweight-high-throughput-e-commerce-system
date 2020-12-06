@@ -14,7 +14,7 @@ import (
 	"api-service/api"
 	"api-service/config"
 	"api-service/router"
-	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/logger"
+	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/logger"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
 )
 

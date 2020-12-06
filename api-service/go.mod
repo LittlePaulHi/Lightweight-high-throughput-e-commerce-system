@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/Shopify/sarama v1.27.2
+	github.com/antonfisher/nested-logrus-formatter v1.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
@@ -20,7 +21,6 @@ require (
 	github.com/swaggo/swag v1.6.9 // indirect
 	github.com/ugorji/go v1.1.13 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
-	github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/logger v0.0.0-00010101000000-000000000000
 	github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg v0.0.0-00010101000000-000000000000
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897 // indirect
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b // indirect
@@ -33,5 +33,3 @@ require (
 )
 
 replace github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg => ../pkg
-
-replace github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/logger => ../logger
