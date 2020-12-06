@@ -74,7 +74,7 @@ func FindAllCartsByCardIDs(cartIDs []int) ([]*Cart, error) {
 // FindAllCartsByAccountID finds all the carts by specified account-id
 func FindAllCartsByAccountID(accountID int) ([]*Cart, error) {
 	cartItems := []*Cart{}
-	err := db.Model(&Cart{}).Where("AccountID = ?", accountID).Find(&cartItems).Error
+	err := db.Model(&Cart{}).Where("account_id = ?", accountID).Find(&cartItems).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func FindAllCartsByAccountID(accountID int) ([]*Cart, error) {
 // FindAllCartsByProductID finds all the carts by specified productID
 func FindAllCartsByProductID(productID int) ([]*Cart, error) {
 	cartItems := []*Cart{}
-	err := db.Model(&Cart{}).Where("ProductID = ?", productID).Find(&cartItems).Error
+	err := db.Model(&Cart{}).Where("product_id = ?", productID).Find(&cartItems).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func DeleteCartByID(id int) (int64, error) {
 
 // DeleteCartByAccountID - soft delete
 func DeleteCartByAccountID(accountID int) (int64, error) {
-	tx := db.Model(&Cart{}).Where("AccountID = ?", accountID).Delete(&Cart{})
+	tx := db.Model(&Cart{}).Where("account_id = ?", accountID).Delete(&Cart{})
 	if tx.Error != nil {
 		return 0, tx.Error
 	}
@@ -115,7 +115,7 @@ func DeleteCartByAccountID(accountID int) (int64, error) {
 
 // DeleteCartByProductID - soft delete
 func DeleteCartByProductID(productID int) (int64, error) {
-	tx := db.Model(&Cart{}).Where("ProductID = ?", productID).Delete(&Cart{})
+	tx := db.Model(&Cart{}).Where("product_id = ?", productID).Delete(&Cart{})
 	if tx.Error != nil {
 		return 0, tx.Error
 	}

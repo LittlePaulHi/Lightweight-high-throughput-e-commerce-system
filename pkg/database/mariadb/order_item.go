@@ -34,7 +34,7 @@ func (orderItem *OrderItem) SaveOrderItem() (*OrderItem, error) {
 
 func FindAllOrderItemsByOrderID(orderID int) ([]*OrderItem, error) {
 	var orderItems []*OrderItem
-	err := db.Model(&OrderItem{}).Where("OrderID = ?", orderID).Find(&orderItems).Error
+	err := db.Model(&OrderItem{}).Where("order_id = ?", orderID).Find(&orderItems).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func FindAllOrderItemsByOrderID(orderID int) ([]*OrderItem, error) {
 
 func FindAllOrderItemsByProductID(productID int) ([]*OrderItem, error) {
 	var orderItems []*OrderItem
-	err := db.Model(&OrderItem{}).Where("ProductID = ?", productID).Find(&orderItems).Error
+	err := db.Model(&OrderItem{}).Where("product_id = ?", productID).Find(&orderItems).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
