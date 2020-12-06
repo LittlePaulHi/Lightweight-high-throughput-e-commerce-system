@@ -75,7 +75,7 @@ func FindOrderByID(id int) (*Order, error) {
 
 func FindAllOrdersByAccountID(accountID int) ([]*Order, error) {
 	var order []*Order
-	err := db.Table("orders").Model(Order{}).Where("AccountID = ?", accountID).Find(&order).Error
+	err := db.Model(Order{}).Where("account_id = ?", accountID).Find(&order).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func FindAllOrdersByAccountID(accountID int) ([]*Order, error) {
 }
 
 func (order *Order) DeleteOrderByID(id int) (int64, error) {
-	tx := db.Table("orders").Model(&Order{}).Where("ID = ?", id).Take(&Order{}).Delete(&Order{})
+	tx := db.Model(&Order{}).Where("ID = ?", id).Take(&Order{}).Delete(&Order{})
 	if tx.Error != nil {
 		return 0, tx.Error
 	}
