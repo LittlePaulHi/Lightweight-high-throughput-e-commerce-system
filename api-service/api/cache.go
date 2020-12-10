@@ -6,12 +6,9 @@ import (
 )
 
 var (
-	redisCartCache  cache.CartCache
-	redisOrderCache cache.OrderCache
+	redisCartCache cache.CartCache
 )
 
 func InitAllCache(conf *config.CacheConfiguration) {
-
 	redisCartCache = cache.NewRedisCartCache(conf.Host, conf.DataBase, conf.Expires)
-	redisOrderCache = cache.NewRedisOrderCache(conf.Host, conf.DataBase, conf.Expires)
 }
