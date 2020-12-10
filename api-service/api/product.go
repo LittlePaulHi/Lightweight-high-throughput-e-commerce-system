@@ -23,20 +23,11 @@ func GetAllProducts(c *gin.Context) {
 	}))
 	defer timer.ObserveDuration()
 
-	// access cache first
-	products := redisProductCache.GetAllProducts()
-
-	// cache miss
-	if products == nil || len(products) == 0 {
-		var err error
-		products, err = service.GetAllProducts()
-		if err != nil {
-			httpStatus = "InternalServerError"
-			responseGin.Response(http.StatusInternalServerError, nil)
-			return
-		}
-
-		redisProductCache.SetAllProducts(products)
+	products, err := service.GetAllProducts()
+	if err != nil {
+		httpStatus = "InternalServerError"
+		responseGin.Response(http.StatusInternalServerError, nil)
+		return
 	}
 
 	data := make(map[string]interface{})
