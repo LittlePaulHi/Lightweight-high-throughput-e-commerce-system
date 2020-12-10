@@ -21,9 +21,7 @@ func (redisClient *Redis) SetAllProducts(products []*mariadb.Product) error {
 		return err
 	}
 
-	redisClient.rdb.Set(ctx, allProductKey, jsonData, cacheExpireTime*time.Minute)
-
-	return nil
+	return redisClient.rdb.Set(ctx, allProductKey, jsonData, cacheExpireTime*time.Minute).Err()
 }
 
 func (redisClient *Redis) GetAllProducts() []*mariadb.Product {
@@ -51,9 +49,7 @@ func (redisClient *Redis) SetAllOrdersByAccountID(accountID int, orders []*maria
 	}
 
 	key := allOrderKeyByAccountID + strconv.Itoa(accountID)
-	redisClient.rdb.Set(ctx, key, jsonData, cacheExpireTime*time.Minute)
-
-	return nil
+	return 	redisClient.rdb.Set(ctx, key, jsonData, cacheExpireTime*time.Minute).Err()
 }
 
 func (redisClient *Redis) GetAllOrdersByAccountID(accountID int) []*mariadb.Order {
@@ -83,9 +79,7 @@ func (redisClient *Redis) SetAllOrderItemsByOrderID(orderID int, items []*mariad
 	}
 
 	key := allOrderItemKeyByOrderID + strconv.Itoa(orderID)
-	redisClient.rdb.Set(ctx, key, jsonData, cacheExpireTime*time.Minute)
-
-	return nil
+	return redisClient.rdb.Set(ctx, key, jsonData, cacheExpireTime*time.Minute).Err()
 }
 
 func (redisClient *Redis) GetAllOrderItemsByOrderID(orderID int) []*mariadb.OrderItem {
