@@ -39,7 +39,7 @@ func (cart *Cart) SaveCart() (*Cart, error) {
 
 // UpdateCart updates the specified cart
 func UpdateCart(cartID int, productID int, quantity int) (*Cart, error) {
-	tx := db.Model(&Order{}).Where("ID = ?", cartID).Take(&Order{}).UpdateColumns(
+	tx := db.Model(&Cart{}).Where("ID = ?", cartID).Take(&Cart{}).UpdateColumns(
 		map[string]interface{}{
 			"ProductID": productID,
 			"Quantity":  quantity,
@@ -52,7 +52,7 @@ func UpdateCart(cartID int, productID int, quantity int) (*Cart, error) {
 
 	// check the updated cart
 	var cart *Cart
-	err := tx.Model(&Order{}).Where("ID = ?", cartID).Take(&cart).Error
+	err := tx.Model(&Cart{}).Where("ID = ?", cartID).Take(&cart).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
