@@ -12,8 +12,16 @@ import (
 )
 
 var (
-	address string
-	ctx     = context.Background()
+	address         string
+	dataBase        int
+	dialTimeout     time.Duration
+	readTimeout     time.Duration
+	writeTimeout    time.Duration
+	poolSize        int
+	poolTimeout     time.Duration
+	cacheExpireTime time.Duration
+
+	ctx = context.Background()
 )
 
 type Redis struct {
@@ -38,16 +46,24 @@ func init() {
 	}
 
 	address = configuration.Redis.Address
+	dataBase = configuration.Redis.DataBase
+	dialTimeout = configuration.Redis.DialTimeout
+	readTimeout = configuration.Redis.ReadTimeout
+	writeTimeout = configuration.Redis.WriteTimeout
+	poolSize = configuration.Redis.PoolSize
+	poolTimeout = configuration.Redis.PoolTimeout
+
+	cacheExpireTime = configuration.Redis.CacheExpireTime
 }
 
 func (redisClient *Redis) Initialize() {
 	redisClient.rdb = redis.NewClient(&redis.Options{
 		Addr:         address,
-		DialTimeout:  10 * time.Second,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		PoolSize:     10,
-		PoolTimeout:  30 * time.Second,
+		DialTimeout:  dialTimeout * time.Second,
+		ReadTimeout:  readTimeout * time.Second,
+		WriteTimeout: writeTimeout * time.Second,
+		PoolSize:     poolSize,
+		PoolTimeout:  poolTimeout * time.Second,
 	})
 
 	if err := redisClient.rdb.Ping(ctx).Err(); err != nil {
