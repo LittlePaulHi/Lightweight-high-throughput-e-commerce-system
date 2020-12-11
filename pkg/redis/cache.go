@@ -49,7 +49,7 @@ func (redisClient *Redis) SetAllOrdersByAccountID(accountID int, orders []*maria
 	}
 
 	key := allOrderKeyByAccountID + strconv.Itoa(accountID)
-	return 	redisClient.rdb.Set(ctx, key, jsonData, cacheExpireTime*time.Minute).Err()
+	return redisClient.rdb.Set(ctx, key, jsonData, cacheExpireTime*time.Minute).Err()
 }
 
 func (redisClient *Redis) GetAllOrdersByAccountID(accountID int) []*mariadb.Order {
