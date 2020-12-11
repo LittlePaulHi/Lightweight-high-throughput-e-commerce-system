@@ -1,6 +1,6 @@
 server:
   runMode: debug
-  addr:
+  addr: 0.0.0.0
   port: 9100
   readTimeout: 60
   writeTimeout: 60
