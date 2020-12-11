@@ -4,7 +4,6 @@ import (
 	"api-service/internal/kafka/sync"
 	"api-service/metrics"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/logger"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -37,14 +36,17 @@ func PurchaseFromCarts(c *gin.Context) {
 	syncKafka.Producer = sync.CrateNewSyncProducer()
 	defer func() {
 		if err := syncKafka.Close(); err != nil {
-			log.Printf("Close kafka producer occurs error: %v\n", err)
+			logger.KafkaProducer.Warnf("Close kafka producer occurs error: %v\n", err)
 		}
 		timer.ObserveDuration()
 	}()
 
 	payload, err := syncKafka.PublishBuyEvent(requestBody.AccountID, requestBody.CartIDs)
 	if err != nil {
-		log.Printf("Producer send message error %v\n", err)
+		logger.KafkaProducer.Warnf("Producer publish message error %v\n", err)
+
+		// TODO: query database when occurs error on producer publish
+
 		httpStatus = "BadRequest"
 		responseGin.Response(http.StatusBadRequest, nil)
 	}

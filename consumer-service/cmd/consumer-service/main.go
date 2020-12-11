@@ -4,8 +4,11 @@ import (
 	syncKafka "consumer-service/internal/kafka/sync"
 	kafkaConfig "github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/configs"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
+	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/logger"
 	"os/signal"
 	"syscall"
+
+	"github.com/sirupsen/logrus"
 
 	"context"
 	"log"
@@ -31,6 +34,8 @@ const (
 )
 
 func init() {
+	logger.SetLogLevel(logrus.DebugLevel)
+
 	mariadb.Setup()
 	viper.AutomaticEnv()
 	viper.SetConfigName("config")

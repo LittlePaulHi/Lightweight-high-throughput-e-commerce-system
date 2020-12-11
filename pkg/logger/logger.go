@@ -10,11 +10,13 @@ import (
 )
 
 var (
-	log        *logrus.Logger
-	InitLog    *logrus.Entry
-	APILog     *logrus.Entry
-	ServiceLog *logrus.Entry
-	RedisLog   *logrus.Entry
+	log           *logrus.Logger
+	InitLog       *logrus.Entry
+	APILog        *logrus.Entry
+	ServiceLog    *logrus.Entry
+	RedisLog      *logrus.Entry
+	KafkaProducer *logrus.Entry
+	KafkaConsumer *logrus.Entry
 )
 
 func init() {
@@ -33,6 +35,8 @@ func init() {
 	APILog = log.WithFields(logrus.Fields{"API_Service": "API"})
 	ServiceLog = log.WithFields(logrus.Fields{"API_Service": "Service"})
 	RedisLog = log.WithFields(logrus.Fields{"Redis": "Cache"})
+	KafkaProducer = log.WithFields(logrus.Fields{"Kafka": "Producer"})
+	KafkaConsumer = log.WithFields(logrus.Fields{"Kafka": "Consumer"})
 }
 
 func SetLogLevel(level logrus.Level) {
