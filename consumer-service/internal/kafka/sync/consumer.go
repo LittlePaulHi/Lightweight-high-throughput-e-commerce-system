@@ -1,6 +1,7 @@
 package sync
 
 import (
+	"consumer-service/internal/kafka"
 	"context"
 	"encoding/json"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
@@ -25,6 +26,12 @@ type Consumer struct {
 
 func init() {
 	redisClient.Initialize()
+}
+
+func NewSyncConsumer() kafka.BuyEventConsumer {
+	return &Consumer{
+		Ready: make(chan bool),
+	}
 }
 
 func (consumer *Consumer) StartConsume(brokerList []string, topics []string, group string, config *sarama.Config) {

@@ -74,8 +74,6 @@ func main() {
 		logger.KafkaConsumer.Panicf("Unrecognized consumer group partition assignor: %s", assignor)
 	}
 
-	consumer := syncKafka.Consumer{
-		Ready: make(chan bool),
-	}
+	consumer := syncKafka.NewSyncConsumer()
 	consumer.StartConsume(brokerList, topics, group, config)
 }
