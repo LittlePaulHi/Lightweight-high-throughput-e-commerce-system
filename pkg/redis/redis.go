@@ -12,8 +12,16 @@ import (
 )
 
 var (
-	address string
-	ctx     = context.Background()
+	address         string
+	dataBase        int
+	dialTimeout     time.Duration
+	readTimeout     time.Duration
+	writeTimeout    time.Duration
+	poolSize        int
+	poolTimeout     time.Duration
+	cacheExpireTime time.Duration
+
+	ctx = context.Background()
 )
 
 type Redis struct {
@@ -38,67 +46,27 @@ func init() {
 	}
 
 	address = configuration.Redis.Address
+	dataBase = configuration.Redis.DataBase
+	dialTimeout = configuration.Redis.DialTimeout
+	readTimeout = configuration.Redis.ReadTimeout
+	writeTimeout = configuration.Redis.WriteTimeout
+	poolSize = configuration.Redis.PoolSize
+	poolTimeout = configuration.Redis.PoolTimeout
+
+	cacheExpireTime = configuration.Redis.CacheExpireTime
 }
 
 func (redisClient *Redis) Initialize() {
 	redisClient.rdb = redis.NewClient(&redis.Options{
 		Addr:         address,
-		DialTimeout:  10 * time.Second,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		PoolSize:     10,
-		PoolTimeout:  30 * time.Second,
+		DialTimeout:  dialTimeout * time.Second,
+		ReadTimeout:  readTimeout * time.Second,
+		WriteTimeout: writeTimeout * time.Second,
+		PoolSize:     poolSize,
+		PoolTimeout:  poolTimeout * time.Second,
 	})
 
 	if err := redisClient.rdb.Ping(ctx).Err(); err != nil {
 		log.Panicf("Unable to connect to redis: %v", err)
-	}
-}
-
-func (redisClient *Redis) Publish(channel string, message string) error {
-	pub := redisClient.rdb.Subscribe(ctx, channel)
-	defer func() {
-		if err := pub.Close(); err != nil {
-			log.Printf("Close publish from Redis occurs error: %v\n", err)
-		}
-	}()
-
-	// Wait for confirmation that subscription is created before publishing anything.
-	if _, err := pub.Receive(ctx); err != nil {
-		panic(err)
-	}
-
-	if err := redisClient.rdb.Publish(ctx, channel, message).Err(); err != nil {
-		panic(err)
-	}
-
-	return nil
-}
-
-func (redisClient *Redis) SubscribeAndReceive(channel string) (string, error) {
-	sub := redisClient.rdb.Subscribe(ctx, channel)
-	defer func() {
-		if err := sub.Close(); err != nil {
-			log.Printf("Close subscribe from Redis occurs error: %v\n", err)
-		}
-	}()
-
-	// Wait for confirmation that subscription is created before publishing anything.
-	if _, err := sub.Receive(ctx); err != nil {
-		panic(err)
-	}
-
-	msgI, err := sub.ReceiveTimeout(ctx, 5*time.Second)
-	if err != nil {
-		log.Printf("Subscribe from Redis and reveive message occurs error: %v", err)
-		return "", err
-	}
-
-	switch msg := msgI.(type) {
-	case *redis.Message:
-		log.Printf("Redis receive %v from %v", msg.Payload, msg.Channel)
-		return msg.Payload, nil
-	default:
-		panic("Unreached redis message")
 	}
 }
