@@ -20,6 +20,11 @@ var (
 	redisClient redis.Redis
 )
 
+const (
+	orderSuccess = "success"
+	orderFail    = "fail"
+)
+
 type Consumer struct {
 	Ready chan bool
 }
@@ -35,6 +40,7 @@ func NewSyncConsumer() kafka.BuyEventConsumer {
 }
 
 func (consumer *Consumer) StartConsume(brokerList []string, topics []string, group string, config *sarama.Config) {
+	config.ClientID = group
 	ctx, cancel := context.WithCancel(context.Background())
 	client, err := sarama.NewConsumerGroup(brokerList, group, config)
 	if err != nil {
@@ -115,7 +121,7 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			continue
 		}
 
-		status, err := updateTables(carts, newOrder)
+		status, err := updateTables(carts, newOrder, purchaseMsg.AccountID)
 		if err != nil {
 			logger.KafkaConsumer.Printf("Update purchase related tables occurs error: %v\n", err)
 			continue
@@ -126,15 +132,40 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			continue
 		}
 
+		go func() {
+			if status == orderSuccess {
+				if products, err := mariadb.FindAllProducts(); err != nil {
+					logger.KafkaConsumer.Warnf("Get all products occurs error: %v\n", err)
+				} else if err = redisClient.SetAllProducts(products); err != nil {
+					logger.KafkaConsumer.Warnf("Cache all products occurs error: %v\n", err)
+				}
+			}
+
+			if orders, err := mariadb.FindAllOrdersByAccountID(purchaseMsg.AccountID); err != nil {
+				logger.KafkaConsumer.Warnf("Get all orders by accountID occurs error: %v\n", err)
+			} else if err = redisClient.SetAllOrdersByAccountID(purchaseMsg.AccountID, orders); err != nil {
+				logger.KafkaConsumer.Warnf("Cache all orders by accountID occurs error: %v\n", err)
+			}
+		}()
+
 		session.MarkMessage(message, "")
 	}
 
 	return nil
 }
 
-func updateTables(carts []*mariadb.Cart, newOrder mariadb.Order) (string, error) {
+func updateTables(carts []*mariadb.Cart, newOrder mariadb.Order, accountID int) (string, error) {
+	account, err := mariadb.FindAccountByID(accountID)
+	if err != nil {
+		logger.KafkaConsumer.Warnf("Get account by id occurs error: %v\n", err)
+	}
+
 	var amounts = 0
 	for _, cart := range carts {
+		if amounts > account.Amount {
+			break
+		}
+
 		product, err := mariadb.FindProductByID(cart.ProductID)
 		if err != nil {
 			logger.KafkaConsumer.Warnf("Get product in consumer occurs error: %v\n", err)
@@ -161,10 +192,15 @@ func updateTables(carts []*mariadb.Cart, newOrder mariadb.Order) (string, error)
 		}
 	}
 
-	if amounts == 0 {
-		newOrder.Status = "fail"
+	if amounts == 0 || amounts > account.Amount {
+		newOrder.Status = orderFail
 	} else {
 		newOrder.Amount = amounts
+
+		account.Amount -= amounts
+		if _, err = account.UpdateAccount(accountID); err != nil {
+			logger.KafkaConsumer.Warnf("Update account %v occurs error: %v\n", accountID, err)
+		}
 	}
 
 	if _, err := newOrder.UpdateOrder(); err != nil {
