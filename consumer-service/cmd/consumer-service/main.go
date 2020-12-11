@@ -5,15 +5,11 @@ import (
 	kafkaConfig "github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/configs"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/logger"
-	"os/signal"
-	"syscall"
 
 	"github.com/sirupsen/logrus"
 
-	"context"
 	"log"
 	"os"
-	"sync"
 
 	"github.com/Shopify/sarama"
 	"github.com/spf13/viper"
@@ -75,51 +71,11 @@ func main() {
 	case Range:
 		config.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategyRange
 	default:
-		log.Panicf("Unrecognized consumer group partition assignor: %s", assignor)
+		logger.KafkaConsumer.Panicf("Unrecognized consumer group partition assignor: %s", assignor)
 	}
 
 	consumer := syncKafka.Consumer{
 		Ready: make(chan bool),
 	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	client, err := sarama.NewConsumerGroup(brokerList, group, config)
-	if err != nil {
-		log.Panicf("Error when creating consumer group client: %v", err)
-	}
-
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for {
-			if err := client.Consume(ctx, topics, &consumer); err != nil {
-				log.Panicf("Error from consumer: %v", err)
-			}
-
-			// check if context was cancelled, signaling that the consumer should stop
-			if ctx.Err() != nil {
-				return
-			}
-
-			consumer.Ready = make(chan bool)
-		}
-	}()
-
-	<-consumer.Ready // Await till the consumer has been set up
-	log.Println("Sarama consumer start running...")
-
-	sigterm := make(chan os.Signal, 1)
-	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)
-	select {
-	case <-ctx.Done():
-		log.Println("terminating: context cancelled")
-	case <-sigterm:
-		log.Println("terminating: via signal")
-	}
-	cancel()
-	wg.Wait()
-	if err = client.Close(); err != nil {
-		log.Panicf("Error occurs when closing client: %v", err)
-	}
+	consumer.StartConsume(brokerList, topics, group, config)
 }

@@ -1,11 +1,16 @@
 package sync
 
 import (
+	"context"
 	"encoding/json"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/kafka/model"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/logger"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/redis"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
 	"github.com/Shopify/sarama"
 )
@@ -20,6 +25,52 @@ type Consumer struct {
 
 func init() {
 	redisClient.Initialize()
+}
+
+func (consumer *Consumer) StartConsume(brokerList []string, topics []string, group string, config *sarama.Config) {
+	ctx, cancel := context.WithCancel(context.Background())
+	client, err := sarama.NewConsumerGroup(brokerList, group, config)
+	if err != nil {
+		logger.KafkaConsumer.Panicf("Error when creating consumer group client: %v", err)
+	}
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			if err := client.Consume(ctx, topics, consumer); err != nil {
+				logger.KafkaConsumer.Panicf("Error from consumer: %v", err)
+			}
+
+			// check if context was cancelled, signaling that the consumer should stop
+			if ctx.Err() != nil {
+				return
+			}
+
+			consumer.Ready = make(chan bool)
+		}
+	}()
+
+	<-consumer.Ready // Await till the consumer has been set up
+	logger.KafkaConsumer.Println("Sarama consumer start running...")
+
+	sigterm := make(chan os.Signal, 1)
+	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case <-ctx.Done():
+		logger.KafkaConsumer.Println("terminating: context cancelled")
+	case <-sigterm:
+		logger.KafkaConsumer.Println("terminating: via signal")
+	}
+
+	cancel()
+	wg.Wait()
+
+	if err = client.Close(); err != nil {
+		logger.KafkaConsumer.Panicf("Error occurs when closing client: %v", err)
+	}
 }
 
 func (consumer *Consumer) Setup(sarama.ConsumerGroupSession) error {
