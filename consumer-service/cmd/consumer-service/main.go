@@ -1,6 +1,8 @@
 package main
 
 import (
+	"consumer-service/internal/kafka"
+	asyncKafka "consumer-service/internal/kafka/async"
 	syncKafka "consumer-service/internal/kafka/sync"
 	kafkaConfig "github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/configs"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
@@ -16,17 +18,21 @@ import (
 )
 
 var (
-	brokerList []string
-	topics     []string
-	group      string
-	assignor   string
-	verbose    bool
+	brokerList   []string
+	topics       []string
+	group        string
+	assignor     string
+	verbose      bool
+	consumerType string
 )
 
 const (
 	RoundRobin = "roundrobin"
 	Sticky     = "sticky"
 	Range      = "range"
+
+	async = "async"
+	sync  = "sync"
 )
 
 func init() {
@@ -54,6 +60,7 @@ func init() {
 	group = configuration.Kafka.Group
 	assignor = configuration.Kafka.Assignor
 	verbose = configuration.Kafka.Verbose
+	consumerType = configuration.Kafka.ConsumerType
 }
 
 func main() {
@@ -74,6 +81,20 @@ func main() {
 		logger.KafkaConsumer.Panicf("Unrecognized consumer group partition assignor: %s", assignor)
 	}
 
-	consumer := syncKafka.NewSyncConsumer()
-	consumer.StartConsume(brokerList, topics, group, config)
+	var consumer kafka.BuyEventConsumer
+	switch consumerType {
+	case async:
+		consumer = asyncKafka.NewAsyncConsumer()
+	case sync:
+		consumer = syncKafka.NewSyncConsumer()
+	default:
+		logger.KafkaConsumer.Fatalln("Error consumer type, should specify async or sync")
+	}
+
+	if consumer != nil {
+		config.Consumer.Offsets.Initial = sarama.OffsetNewest
+		consumer.StartConsume(brokerList, topics, group, config)
+	} else {
+		logger.KafkaConsumer.Fatalln("Null Consumer")
+	}
 }
