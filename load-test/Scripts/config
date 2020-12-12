@@ -1,0 +1,4 @@
+[client]
+host=mariadb
+user=<MYSQL_USERNAME>
+password=<MYSQL_PASSWORD>
