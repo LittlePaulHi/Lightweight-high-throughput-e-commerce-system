@@ -2,20 +2,31 @@
 
 stages=( "getallproducts_test" "getAllOrderByAccountID_test" "getAllOrderItemsByOrderID_test" "addCart_test" "getAllCartsByAccountID_test" "editCart_test" "PurchaseFromCarts_test" "integrated_test" )
 
+echo "Restart apiserver"
 ssh apiserver "sh ./autorestart.sh"
+echo "Restart kafka"
 ssh ppf204@kafka "cd ~/kafka-docker/;docker-compose down;docker-compose rm -vfs;docker-compose up -d"
+echo "Restart redis"
 ssh redis "cd ~/redis/;docker-compose down;docker-compose rm -vfs;docker-compose up -d"
+echo "Restart consumer"
 ssh consumer "sh ./autorestart.sh"
+echo "Restore Database"
+mysql --defaults-extra-file=config < ppfinal.sql
 
 for directory in "${stages[@]}"
 do
-    for filename in $(find ${directory}/*.js | sort -z)
+    for ((vus=500; vus<=3000;vus+=500))
     do
-        db=$(echo ${filename} | sed -e "s/\/.*//g" | sed -e "s/.js//g")
-        k6 run --out influxdb=http://192.168.0.5:8086/${db} "${filename}"
+        k6 run -e TIMES=${vus} --out influxdb=http://192.168.0.5:8086/${directory} "../${directory}.js"
+        echo "Restart apiserver"
         ssh apiserver "sh ./autorestart.sh"
+        echo "Restart kafka"
         ssh ppf204@kafka "cd ~/kafka-docker/;docker-compose down;docker-compose rm -vfs;docker-compose up -d"
+        echo "Restart redis"
         ssh redis "cd ~/redis/;docker-compose down;docker-compose rm -vfs;docker-compose up -d"
+        echo "Restart consumer"
         ssh consumer "sh ./autorestart.sh"
+        echo "Restore Database"
+        mysql --defaults-extra-file=config < ppfinal.sql
     done
 done
