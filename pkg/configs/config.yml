@@ -17,7 +17,7 @@ kafka:
   assignor: roundrobin
   verbose: true
   flushFrequency: 100  # Millisecond
-  ConsumerType: async  # sync or async
+  consumerType: async  # sync or async
 
 redis:
   address: 192.168.0.3:6379
