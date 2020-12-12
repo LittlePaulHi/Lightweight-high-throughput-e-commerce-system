@@ -40,6 +40,12 @@ scrape_configs:
     static_configs:
       - targets: ['192.168.0.1:9100']
 
+  - job_name: 'apiserver-service'
+    scrape_interval: 10s
+    honor_labels: true
+    static_configs:
+      - targets: ['192.168.0.1:3080']
+
   - job_name: 'kafka'
     scrape_interval: 10s
     honor_labels: true
