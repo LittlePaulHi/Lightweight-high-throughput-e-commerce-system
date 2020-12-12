@@ -2,7 +2,9 @@ package mariadb
 
 import (
 	"fmt"
+	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/logger"
 	"log"
+	"time"
 
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
@@ -48,8 +50,17 @@ func Setup() {
 	}
 
 	if err = db.AutoMigrate(&Account{}, &Product{}, &Cart{}, &Order{}, &OrderItem{}); err != nil {
-		log.Fatal(err.Error())
+		logger.MariadbLog.Fatalf("%v\n", err)
 	}
+
+	mariadb, err := db.DB()
+	if err != nil {
+		logger.MariadbLog.Fatalf("get db.DB() occurs error: %v\n", err)
+	}
+
+	mariadb.SetMaxIdleConns(configuration.Mariadb.MaxIdleConns)
+	mariadb.SetMaxOpenConns(configuration.Mariadb.MaxOpenConns)
+	mariadb.SetConnMaxLifetime(configuration.Mariadb.ConnMaxLifetime * time.Hour)
 }
 
 // CloseMariadb operation will be defer

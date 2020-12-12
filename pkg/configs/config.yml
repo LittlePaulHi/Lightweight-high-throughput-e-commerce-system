@@ -3,15 +3,21 @@ mariadb:
   user: ppf204
   host: 192.168.0.4:3306
   name: ppfinal
+  maxIdleConns: 100
+  maxOpenConns: 100
+  connMaxLifetime: 1
 
 kafka:
   brokerList:
-    - 192.168.0.2:9092
+    - 192.168.0.2:9092  # used as single broker
   topics:
     - syncBuyEventTopic
+  bufferSize: 256
   group: syncConsumerGroup
   assignor: roundrobin
   verbose: true
+  flushFrequency: 100  # Millisecond
+  consumerType: async  # sync or async
 
 redis:
   address: 192.168.0.3:6379

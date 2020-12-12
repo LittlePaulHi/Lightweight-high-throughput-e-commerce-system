@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	config "github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/configs"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/kafka/model"
+	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/logger"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/redis"
 	"log"
 	"math/rand"
@@ -16,9 +17,10 @@ import (
 )
 
 var (
-	redisClient redis.Redis
-	topics      []string
-	brokerList  []string
+	redisClient    redis.Redis
+	topics         []string
+	brokerList     []string
+	flushFrequency time.Duration
 )
 
 func init() {
@@ -32,16 +34,17 @@ func init() {
 	var configuration config.Configuration
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error when reading kafka config file, %s", err)
+		logger.KafkaProducer.Panicf("Error when reading kafka config file, %s", err)
 	}
 
 	err := viper.Unmarshal(&configuration)
 	if err != nil {
-		log.Fatalf("Unable to decode the kafka config into struct, %v", err)
+		logger.KafkaProducer.Panicf("Unable to decode the kafka config into struct, %v", err)
 	}
 
 	brokerList = configuration.Kafka.BrokerList
 	topics = configuration.Kafka.Topics
+	flushFrequency = configuration.Kafka.FlushFrequency
 }
 
 type Kafka struct {
@@ -53,14 +56,15 @@ func CrateNewSyncProducer() sarama.SyncProducer {
 	sarama.Logger = log.New(os.Stdout, "", log.Ltime)
 
 	sconfig := sarama.NewConfig()
-	sconfig.Producer.Partitioner = sarama.NewRandomPartitioner
+	sconfig.Producer.Partitioner = sarama.NewRoundRobinPartitioner
 	sconfig.Producer.RequiredAcks = sarama.WaitForAll // Wait for all in-sync replicas to ack the message
 	sconfig.Producer.Retry.Max = 10
 	sconfig.Producer.Return.Successes = true
+	sconfig.Producer.Flush.Frequency = flushFrequency * time.Millisecond
 
 	producer, err := sarama.NewSyncProducer(brokerList, sconfig)
 	if err != nil {
-		log.Printf("Failed to start Sarama SyncProducer, %v\n", err)
+		logger.KafkaProducer.Warnf("Failed to start Sarama SyncProducer, %v\n", err)
 	}
 
 	return producer
@@ -75,27 +79,27 @@ func (kafka *Kafka) PublishBuyEvent(accountID int, cartIDs []int) (string, error
 	}
 	purchaseMsgBytes, err := json.Marshal(purchaseMsg)
 	if err != nil {
-		log.Panicf("Convert purchase message struct to bytes occurs error: %v\n", err)
+		logger.KafkaProducer.Panicf("Convert purchase message struct to bytes occurs error: %v\n", err)
 		return "", err
 	}
 
+	// TODO: use Flush to batched up and send the message
+
 	msg := &sarama.ProducerMessage{
-		Topic:     topics[0],
-		Partition: -1,
-		Value:     sarama.ByteEncoder(purchaseMsgBytes),
+		Topic: topics[0],
+		Value: sarama.ByteEncoder(purchaseMsgBytes),
 	}
 
 	partition, offset, err := kafka.Producer.SendMessage(msg)
 	if err != nil {
-		log.Panicf("Failed to store your message, %v\n", err)
+		logger.KafkaProducer.Panicf("Failed to store your message, %v\n", err)
 		return "", err
 	}
-	log.Printf("Purchase message is stored with unique identifier important partition: %v, offset: %  v\n", partition, offset)
+	logger.KafkaProducer.Printf("Purchase message is stored with unique identifier important partition: %v, offset: %v\n", partition, offset)
 
 	payload, err := redisClient.SubscribeAndReceive(purchaseMsg.RedisChannel)
 	if err != nil {
-		// TODO: query database instead
-		log.Panicf("SubscribeAndReceive the result of buy event occurs error, %v", err)
+		logger.RedisLog.Warnf("SubscribeAndReceive the result of buy event occurs error, %v", err)
 		return "", err
 	}
 
@@ -104,7 +108,7 @@ func (kafka *Kafka) PublishBuyEvent(accountID int, cartIDs []int) (string, error
 
 func (kafka *Kafka) Close() error {
 	if err := kafka.Producer.Close(); err != nil {
-		log.Fatal("Failed to close the kafka producer", err)
+		logger.KafkaProducer.Warnf("Failed to close the kafka producer", err)
 	}
 
 	return nil

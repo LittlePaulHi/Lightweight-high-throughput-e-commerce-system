@@ -48,16 +48,17 @@ func (account *Account) UpdateAccount(id int) (*Account, error) {
 	return account, nil
 }
 
-func (account *Account) FindAccountByID(id int) (*Account, error) {
+func FindAccountByID(id int) (*Account, error) {
+	var account Account
 	err := db.Model(Account{}).Where("ID = ?", id).Take(&account).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return &Account{}, errors.New("Account Not Found")
+		return &Account{}, errors.New("account Not Found")
 	}
 	if err != nil {
 		return &Account{}, err
 	}
 
-	return account, nil
+	return &account, nil
 }
 
 func (account *Account) DeleteAccount(id int) (int64, error) {

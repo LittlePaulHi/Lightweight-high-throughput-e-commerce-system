@@ -1,11 +1,17 @@
 package sync
 
 import (
+	"consumer-service/internal/kafka"
+	"context"
 	"encoding/json"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/database/mariadb"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/kafka/model"
+	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/logger"
 	"github/littlepaulhi/highly-concurrent-e-commerce-lightweight-system/pkg/redis"
-	"log"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
 	"github.com/Shopify/sarama"
 )
@@ -14,12 +20,70 @@ var (
 	redisClient redis.Redis
 )
 
+const (
+	orderSuccess = "success"
+	orderFail    = "fail"
+)
+
 type Consumer struct {
 	Ready chan bool
 }
 
 func init() {
 	redisClient.Initialize()
+}
+
+func NewSyncConsumer() kafka.BuyEventConsumer {
+	return &Consumer{
+		Ready: make(chan bool),
+	}
+}
+
+func (consumer *Consumer) StartConsume(brokerList []string, topics []string, group string, config *sarama.Config) {
+	config.ClientID = group
+	ctx, cancel := context.WithCancel(context.Background())
+	client, err := sarama.NewConsumerGroup(brokerList, group, config)
+	if err != nil {
+		logger.KafkaConsumer.Panicf("Error when creating consumer group client: %v", err)
+	}
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			if err := client.Consume(ctx, topics, consumer); err != nil {
+				logger.KafkaConsumer.Panicf("Error from consumer: %v", err)
+			}
+
+			// check if context was cancelled, signaling that the consumer should stop
+			if ctx.Err() != nil {
+				return
+			}
+
+			consumer.Ready = make(chan bool)
+		}
+	}()
+
+	<-consumer.Ready // Await till the consumer has been set up
+	logger.KafkaConsumer.Println("Sarama consumer start running...")
+
+	sigterm := make(chan os.Signal, 1)
+	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case <-ctx.Done():
+		logger.KafkaConsumer.Println("terminating: context cancelled")
+	case <-sigterm:
+		logger.KafkaConsumer.Println("terminating: via signal")
+	}
+
+	cancel()
+	wg.Wait()
+
+	if err = client.Close(); err != nil {
+		logger.KafkaConsumer.Panicf("Error occurs when closing client: %v", err)
+	}
 }
 
 func (consumer *Consumer) Setup(sarama.ConsumerGroupSession) error {
@@ -33,40 +97,56 @@ func (consumer *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
 
 func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
-		log.Printf("Message claimed: value = %s, timestamp = %v, topic = %s",
+		logger.KafkaConsumer.Printf("Message claimed: value = %s, timestamp = %v, topic = %s",
 			string(message.Value), message.Timestamp, message.Topic)
 
 		purchaseMsg := &model.PurchaseMessage{}
 		err := json.Unmarshal(message.Value, purchaseMsg)
 		if err != nil {
-			log.Printf("Convert purchase message struct to bytes occurs error: %v\n", err)
+			logger.KafkaConsumer.Printf("Convert purchase message struct to bytes occurs error: %v\n", err)
 			continue
 		}
 
 		// query `Cart` table and update the `Product` table
 		carts, err := mariadb.FindAllCartsByCardIDs(purchaseMsg.CartIDs)
 		if err != nil {
-			log.Printf("Get carts in consumer occurs error: %v\n", err)
+			logger.KafkaConsumer.Printf("Get carts in consumer occurs error: %v\n", err)
 			continue
 		}
 
 		newOrder := mariadb.Order{}
 		newOrder.Initialize(purchaseMsg.AccountID, 0)
 		if _, err = newOrder.SaveOrder(); err != nil {
-			log.Printf("Create order occurs error: %v\n", err)
+			logger.KafkaConsumer.Printf("Create order occurs error: %v\n", err)
 			continue
 		}
 
-		status, err := updateTables(carts, newOrder)
+		status, err := updateTables(carts, newOrder, purchaseMsg.AccountID)
 		if err != nil {
-			log.Printf("Update purchase related tables occurs error: %v\n", err)
+			logger.KafkaConsumer.Printf("Update purchase related tables occurs error: %v\n", err)
 			continue
 		}
 
 		if err = publishToRedis(purchaseMsg.RedisChannel, status); err != nil {
-			log.Printf("Publish the results to Redis occurs error: %v\n", err)
+			logger.KafkaConsumer.Printf("Publish the results to Redis occurs error: %v\n", err)
 			continue
 		}
+
+		go func() {
+			if status == orderSuccess {
+				if products, err := mariadb.FindAllProducts(); err != nil {
+					logger.KafkaConsumer.Warnf("Get all products occurs error: %v\n", err)
+				} else if err = redisClient.SetAllProducts(products); err != nil {
+					logger.KafkaConsumer.Warnf("Cache all products occurs error: %v\n", err)
+				}
+			}
+
+			if orders, err := mariadb.FindAllOrdersByAccountID(purchaseMsg.AccountID); err != nil {
+				logger.KafkaConsumer.Warnf("Get all orders by accountID occurs error: %v\n", err)
+			} else if err = redisClient.SetAllOrdersByAccountID(purchaseMsg.AccountID, orders); err != nil {
+				logger.KafkaConsumer.Warnf("Cache all orders by accountID occurs error: %v\n", err)
+			}
+		}()
 
 		session.MarkMessage(message, "")
 	}
@@ -74,43 +154,57 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 	return nil
 }
 
-func updateTables(carts []*mariadb.Cart, newOrder mariadb.Order) (string, error) {
+func updateTables(carts []*mariadb.Cart, newOrder mariadb.Order, accountID int) (string, error) {
+	account, err := mariadb.FindAccountByID(accountID)
+	if err != nil {
+		logger.KafkaConsumer.Warnf("Get account by id occurs error: %v\n", err)
+	}
+
 	var amounts = 0
 	for _, cart := range carts {
+		if amounts > account.Amount {
+			break
+		}
+
 		product, err := mariadb.FindProductByID(cart.ProductID)
 		if err != nil {
-			log.Panicf("Get product in consumer occurs error: %v\n", err)
+			logger.KafkaConsumer.Warnf("Get product in consumer occurs error: %v\n", err)
 			return "", err
 		}
 
 		if product.Quantity >= cart.Quantity {
 			product.Quantity -= cart.Quantity
 			if _, err := product.UpdateProduct(); err != nil {
-				log.Printf("Purchase the prouct %v occurs error: %v", product.Name, err)
+				logger.KafkaConsumer.Printf("Purchase the prouct %v occurs error: %v", product.Name, err)
 				continue
 			}
 
 			orderItem := mariadb.OrderItem{}
 			orderItem.Initialize(newOrder.ID, cart.ProductID, cart.Quantity)
 			if _, err = orderItem.SaveOrderItem(); err != nil {
-				log.Printf("Save the orderItem with product %v occurs error: %v", product.Name, err)
+				logger.KafkaConsumer.Printf("Save the orderItem with product %v occurs error: %v", product.Name, err)
 				continue
 			}
 
 			amounts += product.Price * cart.Quantity
 		} else {
-			log.Printf("Product %v already sold out", product.Name)
+			logger.KafkaConsumer.Printf("Product %v already sold out", product.Name)
 		}
 	}
 
-	if amounts == 0 {
-		newOrder.Status = "fail"
+	if amounts == 0 || amounts > account.Amount {
+		newOrder.Status = orderFail
 	} else {
 		newOrder.Amount = amounts
+
+		account.Amount -= amounts
+		if _, err = account.UpdateAccount(accountID); err != nil {
+			logger.KafkaConsumer.Warnf("Update account %v occurs error: %v\n", accountID, err)
+		}
 	}
 
 	if _, err := newOrder.UpdateOrder(); err != nil {
-		log.Panicf("Update order %v occurs error: %v\n", newOrder.ID, err)
+		logger.KafkaConsumer.Warnf("Update order %v occurs error: %v\n", newOrder.ID, err)
 		return "", err
 	}
 

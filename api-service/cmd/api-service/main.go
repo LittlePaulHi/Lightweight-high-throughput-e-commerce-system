@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-
-	"log"
 	"net/http"
 	"time"
 
@@ -20,7 +18,8 @@ import (
 )
 
 var (
-	eg errgroup.Group
+	eg            errgroup.Group
+	configuration config.Configuration
 )
 
 func init() {
@@ -29,10 +28,6 @@ func init() {
 	viper.SetConfigName("config-server")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("$PROJECT_PATH/api-service/config/")
-}
-
-func main() {
-	var configuration config.Configuration
 
 	if err := viper.ReadInConfig(); err != nil {
 		logger.InitLog.Errorf("Error when reading config file, %s", err)
@@ -42,7 +37,9 @@ func main() {
 	if err != nil {
 		logger.InitLog.Errorf("Unable to decode into struct, %v", err)
 	}
+}
 
+func main() {
 	gin.SetMode(configuration.Server.RunMode)
 
 	ginRouter := router.Initialize()
@@ -59,7 +56,7 @@ func main() {
 		WriteTimeout: writeTimeout * time.Second,
 	}
 
-	log.Printf("[Info] Start http server, listening on port %s", endPoint)
+	logger.APILog.Printf("[Info] Start http server, listening on port %s", endPoint)
 
 	eg.Go(func() error {
 		return apiServer.ListenAndServe()
