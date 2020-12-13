@@ -35,13 +35,17 @@ export default function () {
 
   let data = JSON.parse(res_get.body).data;
 
+  if (data.hasOwnProperty("cart") == false) {
+    check(res_get, { 'status is 200': (r) => r.status === 200, });
+    return;
+  }
+
   let cart = data["cart"];
   
   let cartids = [];
 
   if(cart.length == 0) {
     check(res_get, { 'status is 200': (r) => r.status === 200, });
-    console.log('Length?' );
     return;
   }
   else {
@@ -53,13 +57,11 @@ export default function () {
 
   sleep(100);
 
-  console.log('Change ' + __VU + ' CartIDs: ' + cartids);
+  //console.log('Change ' + __VU + ' CartIDs: ' + cartids);
 
   const payload_post = JSON.stringify({ 'accountID': __VU, 'cartIDs': cartids });
   const params_post = { headers: { 'Content-Type': 'application/json' } };
   let res_post = http.post(`${BASE_URL}/api/purchase/sync`, payload_post, params_post);  
-
-  console.log('success!');
 
   if(res_post.status != 200)
     console.log(`[${__VU}] Response status: ${res_post.status}`);

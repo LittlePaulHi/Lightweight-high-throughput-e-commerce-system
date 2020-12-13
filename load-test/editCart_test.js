@@ -34,6 +34,11 @@ export default function () {
   let res_get = http.get(`${BASE_URL}/api/cart/getAllByAccountID`, params_get);
 
   let data = JSON.parse(res_get.body).data;
+  
+  if (data.hasOwnProperty("cart") == false) {
+    check(res_get, { 'status is 200': (r) => r.status === 200, });
+    return;
+  }
 
   let cart = data["cart"];
   
@@ -42,11 +47,9 @@ export default function () {
 
   if(cart.length == 0) {
     check(res_get, { 'status is 200': (r) => r.status === 200, });
-    console.log('Length?' );
     return;
   }
   else {
-    console.log('Success!' );
     cartid = getRandomInt(cart.length);
     quantity = getRandomInt(2000);
   }
