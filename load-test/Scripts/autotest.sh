@@ -1,15 +1,16 @@
 #!/bin/bash
 
 stages=( "getallproducts_test" "getAllOrderByAccountID_test" "getAllOrderItemsByOrderID_test" "addCart_test" "getAllCartsByAccountID_test" "editCart_test" "PurchaseFromCarts_test" "integrated_test" )
+tag="async"
 
 echo "Restart apiserver"
-ssh apiserver "sh ./autorestart.sh"
+ssh apiserver "TAG=${tag} sh ./autorestart.sh"
 echo "Restart kafka"
-ssh ppf204@kafka "cd ~/kafka-docker/;docker-compose down;docker-compose rm -vfs;docker-compose up -d"
+ssh ppf204@kafka "cd ~/kafka-docker/;docker-compose down;docker-compose rm -vfs;docker-compose -f ./docker-compose-single-broker.yml up -d"
 echo "Restart redis"
 ssh redis "cd ~/redis/;docker-compose down;docker-compose rm -vfs;docker-compose up -d"
 echo "Restart consumer"
-ssh consumer "sh ./autorestart.sh"
+ssh consumer "TAG=${tag} sh ./autorestart.sh"
 echo "Restore Database"
 mysql --defaults-extra-file=config < ppfinal.sql
 
@@ -19,13 +20,13 @@ do
     do
         k6 run -e TIMES=${vus} --out influxdb=http://192.168.0.5:8086/${directory} "../${directory}.js"
         echo "Restart apiserver"
-        ssh apiserver "sh ./autorestart.sh"
+        ssh apiserver "TAG=${tag} sh ./autorestart.sh"
         echo "Restart kafka"
-        ssh ppf204@kafka "cd ~/kafka-docker/;docker-compose down;docker-compose rm -vfs;docker-compose up -d"
+        ssh ppf204@kafka "cd ~/kafka-docker/;docker-compose down;docker-compose rm -vfs;docker-compose -f ./docker-compose-single-broker.yml up -d"
         echo "Restart redis"
         ssh redis "cd ~/redis/;docker-compose down;docker-compose rm -vfs;docker-compose up -d"
         echo "Restart consumer"
-        ssh consumer "sh ./autorestart.sh"
+        ssh consumer "TAG=${tag} sh ./autorestart.sh"
         echo "Restore Database"
         mysql --defaults-extra-file=config < ppfinal.sql
     done

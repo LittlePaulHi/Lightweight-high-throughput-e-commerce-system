@@ -35,6 +35,11 @@ export default function () {
 
   let data = JSON.parse(res_get.body).data;
 
+  if (data.hasOwnProperty("orders") == false) {
+    check(res_get, { 'status is 200': (r) => r.status === 200, });
+    return;
+  }
+
   let order = data["orders"];
 
   let orderid;
@@ -43,7 +48,6 @@ export default function () {
   if(order.length == 0) {
     check(res_get, { 'status is 200': (r) => r.status === 200, });
     sleep(500);
-    console.log('No data');
     return;
   }
   else {

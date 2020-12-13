@@ -6,72 +6,72 @@ export let options = {
       Stage1_getallproducts: {
         executor: 'constant-arrival-rate',
         exec: 'getallproducts',
-        rate: 30*__ENV.TIMES/100,
+        rate: 30*__ENV.TIMES/10,
         timeUnit: '1s',
-        duration: '1m',
+        duration: '3m',
 //	startTime: '16m',
-        preAllocatedVUs: 25*__ENV.TIMES/100,
-        maxVUs: 35*__ENV.TIMES/100
+        preAllocatedVUs: 25*__ENV.TIMES/10,
+        maxVUs: 35*__ENV.TIMES/10
       },
       Stage1_getAllOrderByAccountID: {
         executor: 'constant-arrival-rate',
         exec: 'getAllOrderByAccountID',
-        rate: 15*__ENV.TIMES/100,
+        rate: 15*__ENV.TIMES/10,
         timeUnit: '1s',
         duration: '1m',
-//        startTime: '16m',
-        preAllocatedVUs: 10*__ENV.TIMES/100,
-        maxVUs: 20*__ENV.TIMES/100
+        startTime: '1.5m',
+        preAllocatedVUs: 10*__ENV.TIMES/10,
+        maxVUs: 20*__ENV.TIMES/10
       },
       Stage1_getAllOrderItemsByOrderID: {
         executor: 'constant-arrival-rate',
         exec: 'getAllOrderItemsByOrderID',
-        rate: 15*__ENV.TIMES/100,
+        rate: 15*__ENV.TIMES/10,
         timeUnit: '1s',
         duration: '1m',
-//        startTime: '16m',
-        preAllocatedVUs: 10*__ENV.TIMES/100,
-        maxVUs: 20*__ENV.TIMES/100
+        startTime: '1.5m',
+        preAllocatedVUs: 10*__ENV.TIMES/10,
+        maxVUs: 20*__ENV.TIMES/10
       },
       Stage1_getAllCartsByAccountID: {
         executor: 'constant-arrival-rate',
         exec: 'getAllCartsByAccountID',
-        rate: 15*__ENV.TIMES/100,
+        rate: 15*__ENV.TIMES/10,
         timeUnit: '1s',
         duration: '1m',
-//        startTime: '16m',
-        preAllocatedVUs: 10*__ENV.TIMES/100,
-        maxVUs: 20*__ENV.TIMES/100
+        startTime: '1m',
+        preAllocatedVUs: 10*__ENV.TIMES/10,
+        maxVUs: 20*__ENV.TIMES/10
       },
       Stage1_addCart: {
         executor: 'constant-arrival-rate',
         exec: 'addCart',
-        rate: 11*__ENV.TIMES/100,
+        rate: 11*__ENV.TIMES/10,
         timeUnit: '1s',
         duration: '1m',
-//        startTime: '16m',
-        preAllocatedVUs: 5*__ENV.TIMES/100,
-        maxVUs: 15*__ENV.TIMES/100
+        startTime: '30s',
+        preAllocatedVUs: 5*__ENV.TIMES/10,
+        maxVUs: 15*__ENV.TIMES/10
       },
       Stage1_editCart: {
         executor: 'constant-arrival-rate',
         exec: 'editCart',
-        rate: 11*__ENV.TIMES/100,
+        rate: 11*__ENV.TIMES/10,
         timeUnit: '1s',
         duration: '1m',
-//        startTime: '16m',
-        preAllocatedVUs: 5*__ENV.TIMES/100,
-        maxVUs: 15*__ENV.TIMES/100
+        startTime: '1m',
+        preAllocatedVUs: 5*__ENV.TIMES/10,
+        maxVUs: 15*__ENV.TIMES/10
       },
       Stage1_PurchaseFromCarts: {
         executor: 'constant-arrival-rate',
         exec: 'PurchaseFromCarts',
-        rate: 3*__ENV.TIMES/100,
+        rate: 3*__ENV.TIMES/10,
         timeUnit: '1s',
         duration: '1m',
-//        startTime: '16m',
-        preAllocatedVUs: 3*__ENV.TIMES/100,
-        maxVUs: 5*__ENV.TIMES/100
+        startTime: '1.5m',
+        preAllocatedVUs: 3*__ENV.TIMES/10,
+        maxVUs: 5*__ENV.TIMES/10
       }
   }
 };
@@ -167,8 +167,10 @@ export function getAllCartsByAccountID() {
 
 export function addCart() {
 
-    let productid = getRandomInt(20000);
-    const payload = JSON.stringify({ 'accountID': __VU, 'productID': productid, 'quantity': 1 });
+    let productid = getRandomInt(10000);
+    let quantity = getRandomInt(2000);
+
+    const payload = JSON.stringify({ 'accountID': __VU, 'productID': productid, 'quantity': quantity });
     const params = { headers: { 'Content-Type': 'application/json' }};
     let res = http.post(`${BASE_URL}/api/cart/addCart`, payload, params);
 
@@ -210,6 +212,12 @@ export function PurchaseFromCarts() {
     const params_get = { headers: { 'Content-Type': 'application/json', 'accountID': __VU, 'cartID': -1, 'productID': -1, 'quantity': -1 } };
     let res_get = http.get(`${BASE_URL}/api/cart/getAllByAccountID`, params_get);
     let data = JSON.parse(res_get.body).data;
+
+    if (data.hasOwnProperty("cart") == false) {
+        check(res_get, { 'status is 200': (r) => r.status === 200, });
+        return;
+    }
+
     let cart = data["cart"];
     let cartids = [];
 
