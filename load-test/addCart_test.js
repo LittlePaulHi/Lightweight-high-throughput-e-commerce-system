@@ -30,7 +30,10 @@ function getRandomInt(max) {
 
 export default function () {
   // our HTTP request, note that we are saving the response to res, which can be accessed later
-  const payload = JSON.stringify({ 'accountID': __VU, 'productID': 10, 'quantity': 1 });
+  let productid = getRandomInt(10000);
+  let quantity = getRandomInt(2000);
+
+  const payload = JSON.stringify({ 'accountID': __VU, 'productID': productid, 'quantity': quantity });
   const params = { headers: { 'Content-Type': 'application/json' }};
   let res = http.post(`${BASE_URL}/api/cart/addCart`, payload, params);
 
