@@ -88,7 +88,6 @@ function getRandomInt(max) {
 export function getallproducts() {
     
     let res = http.get(`${BASE_URL}/api/product/getAll`);
-    check(res, { 'status was 200': (r) => r.status == 200 });
 
     const checkRes = check(res, {
         'status is 200': (r) => r.status === 200,
@@ -126,7 +125,6 @@ export function getAllOrderItemsByOrderID() {
     if(order.length == 0) {
         check(res_get, { 'status is 200': (r) => r.status === 200, });
         sleep(500);
-        console.log('No data');
         return;
     }
     else {
