@@ -28,7 +28,7 @@ func GetProduct(id int) (*mariadb.Product, error) {
 }
 
 // GetAllProducts from mariadb/redis
-func GetAllProducts() ([]*mariadb.Product, error) {
+func GetAllProducts() ([]*mariadb.AllProducts, error) {
 	products := productRedisClient.GetAllProducts()
 	if products == nil {
 		var err error

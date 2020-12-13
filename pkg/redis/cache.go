@@ -14,7 +14,7 @@ const (
 	allOrderItemKeyByOrderID = "AllOrderItemsByOrderID"
 )
 
-func (redisClient *Redis) SetAllProducts(products []*mariadb.Product) error {
+func (redisClient *Redis) SetAllProducts(products []*mariadb.AllProducts) error {
 	jsonData, err := json.Marshal(products)
 	if err != nil {
 		logger.RedisLog.Warnf("Set cache of allProducts occurs error: %v\n", err)
@@ -24,13 +24,13 @@ func (redisClient *Redis) SetAllProducts(products []*mariadb.Product) error {
 	return redisClient.rdb.Set(ctx, allProductKey, jsonData, cacheExpireTime*time.Minute).Err()
 }
 
-func (redisClient *Redis) GetAllProducts() []*mariadb.Product {
+func (redisClient *Redis) GetAllProducts() []*mariadb.AllProducts {
 	data, err := redisClient.rdb.Get(ctx, allProductKey).Result()
 	if err != nil {
 		return nil
 	}
 
-	var products []*mariadb.Product
+	var products []*mariadb.AllProducts
 
 	err = json.Unmarshal([]byte(data), &products)
 	if err != nil {
