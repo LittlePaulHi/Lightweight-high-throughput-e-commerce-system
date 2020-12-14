@@ -37,6 +37,7 @@ export default function () {
   
   if (data.hasOwnProperty("cart") == false) {
     check(res_get, { 'status is 200': (r) => r.status === 200, });
+    sleep(500);
     return;
   }
 
@@ -54,7 +55,7 @@ export default function () {
     quantity = getRandomInt(2000);
   }
 
-  sleep(100);
+  sleep(200);
 
   //console.log('Change ' + __VU + ' CartID: ' + cart[cartid]['ID'] + ' ProductID: ' + cart[cartid]['ProductID'] + ' to Quantity ' + quantity );
 
