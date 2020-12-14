@@ -37,6 +37,7 @@ export default function () {
 
   if (data.hasOwnProperty("orders") == false) {
     check(res_get, { 'status is 200': (r) => r.status === 200, });
+    sleep(500);
     return;
   }
 
@@ -55,7 +56,7 @@ export default function () {
     quantity = getRandomInt(2000);
   }
 
-  sleep(100);
+  sleep(200);
 
   const params_getitem = { headers: { 'Content-Type': 'application/json', 'orderID': orderid } };
   let res_getitem = http.get(`${BASE_URL}/api/order/getAllItemsByOrderID`, params_getitem);
@@ -67,5 +68,5 @@ export default function () {
     'status is 200': (r) => r.status === 200,
   });
   
-  sleep(500);
+  sleep(300);
 }

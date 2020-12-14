@@ -37,15 +37,16 @@ export default function () {
 
   if (data.hasOwnProperty("cart") == false) {
     check(res_get, { 'status is 200': (r) => r.status === 200, });
+    sleep(500);
     return;
   }
 
   let cart = data["cart"];
-  
   let cartids = [];
 
   if(cart.length == 0) {
     check(res_get, { 'status is 200': (r) => r.status === 200, });
+    sleep(500);
     return;
   }
   else {
@@ -55,9 +56,7 @@ export default function () {
     }
   }
 
-  sleep(100);
-
-  //console.log('Change ' + __VU + ' CartIDs: ' + cartids);
+  sleep(200);
 
   const payload_post = JSON.stringify({ 'accountID': __VU, 'cartIDs': cartids });
   const params_post = { headers: { 'Content-Type': 'application/json' } };

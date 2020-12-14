@@ -13,16 +13,16 @@ export let options = {
         preAllocatedVUs: 25*__ENV.TIMES/10,
         maxVUs: 35*__ENV.TIMES/10
       },
-      Stage1_getAllOrderByAccountID: {
-        executor: 'constant-arrival-rate',
-        exec: 'getAllOrderByAccountID',
-        rate: 15*__ENV.TIMES/10,
-        timeUnit: '1s',
-        duration: '1m',
-        startTime: '1.5m',
-        preAllocatedVUs: 10*__ENV.TIMES/10,
-        maxVUs: 20*__ENV.TIMES/10
-      },
+//      Stage1_getAllOrderByAccountID: {
+//        executor: 'constant-arrival-rate',
+//        exec: 'getAllOrderByAccountID',
+//        rate: 15*__ENV.TIMES/10,
+//        timeUnit: '1s',
+//        duration: '1m',
+//        startTime: '1.5m',
+//        preAllocatedVUs: 10*__ENV.TIMES/10,
+//        maxVUs: 20*__ENV.TIMES/10
+//      },
       Stage1_getAllOrderItemsByOrderID: {
         executor: 'constant-arrival-rate',
         exec: 'getAllOrderItemsByOrderID',
@@ -33,16 +33,16 @@ export let options = {
         preAllocatedVUs: 10*__ENV.TIMES/10,
         maxVUs: 20*__ENV.TIMES/10
       },
-      Stage1_getAllCartsByAccountID: {
-        executor: 'constant-arrival-rate',
-        exec: 'getAllCartsByAccountID',
-        rate: 15*__ENV.TIMES/10,
-        timeUnit: '1s',
-        duration: '1m',
-        startTime: '1m',
-        preAllocatedVUs: 10*__ENV.TIMES/10,
-        maxVUs: 20*__ENV.TIMES/10
-      },
+//      Stage1_getAllCartsByAccountID: {
+//        executor: 'constant-arrival-rate',
+//        exec: 'getAllCartsByAccountID',
+//        rate: 15*__ENV.TIMES/10,
+//        timeUnit: '1s',
+//        duration: '1m',
+//        startTime: '1m',
+//        preAllocatedVUs: 10*__ENV.TIMES/10,
+//        maxVUs: 20*__ENV.TIMES/10
+//      },
       Stage1_addCart: {
         executor: 'constant-arrival-rate',
         exec: 'addCart',
@@ -132,18 +132,19 @@ export function getAllOrderItemsByOrderID() {
         quantity = getRandomInt(2000);
     }
     
-    sleep(100);
+    sleep(200);
 
     const params_getitem = { headers: { 'Content-Type': 'application/json', 'orderID': orderid } };
     let res_getitem = http.get(`${BASE_URL}/api/order/getAllItemsByOrderID`, params_getitem);
     
     if(res_getitem.status != 200)
         console.log(`[${__VU}] Response status: ${res_getitem.status}`);
+    
     const checkRes = check(res_getitem, {
         'status is 200': (r) => r.status === 200,
     });
    
-    sleep(500);
+    sleep(300);
 }
 
 
@@ -194,6 +195,7 @@ export function editCart() {
 
     if(cart.length == 0) {
         check(res_get, { 'status is 200': (r) => r.status === 200, });
+        sleep(500);
         return;
     }
     else {
@@ -201,7 +203,20 @@ export function editCart() {
         quantity = getRandomInt(2000);
     }
 
-    sleep(100);
+    sleep(200);
+
+    const payload_post = JSON.stringify({ 'accountID': __VU, 'productID': cart[cartid]['ProductID'], 'quantity': quantity, 'cartID': cart[cartid]['ID'] });
+    const params_post = { headers: { 'Content-Type': 'application/json' }};
+    let res_post = http.post(`${BASE_URL}/api/cart/editCart`, payload_post, params_post);
+  
+    if(res_post.status != 200)
+      console.log(`[${__VU}] Response status: ${res_post.status}`);
+  
+    const checkRes = check(res_post, {
+      'status is 200': (r) => r.status === 200,
+    });
+
+    sleep(300);
 }
 
 
@@ -213,6 +228,7 @@ export function PurchaseFromCarts() {
 
     if (data.hasOwnProperty("cart") == false) {
         check(res_get, { 'status is 200': (r) => r.status === 200, });
+        sleep(500);
         return;
     }
 
@@ -221,6 +237,7 @@ export function PurchaseFromCarts() {
 
     if(cart.length == 0) {
         check(res_get, { 'status is 200': (r) => r.status === 200, });
+        sleep(500);
         return;
     }
     else {
@@ -230,7 +247,7 @@ export function PurchaseFromCarts() {
         }
     }
 
-    sleep(100);
+    sleep(200);
 
     const payload_post = JSON.stringify({ 'accountID': __VU, 'cartIDs': cartids });
     const params_post = { headers: { 'Content-Type': 'application/json' } };
