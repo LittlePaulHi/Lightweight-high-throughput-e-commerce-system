@@ -60,6 +60,7 @@ func Setup() {
 
 	mariadb.SetMaxIdleConns(configuration.Mariadb.MaxIdleConns)
 	mariadb.SetMaxOpenConns(configuration.Mariadb.MaxOpenConns)
+	mariadb.SetConnMaxIdleTime(configuration.Mariadb.ConnMaxIdleTime * time.Hour)
 	mariadb.SetConnMaxLifetime(configuration.Mariadb.ConnMaxLifetime * time.Hour)
 }
 

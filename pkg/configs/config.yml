@@ -4,8 +4,9 @@ mariadb:
   host: 192.168.0.4:3306
   name: ppfinal
   maxIdleConns: 100
-  maxOpenConns: 100
-  connMaxLifetime: 1
+  maxOpenConns: 300
+  connMaxIdleTime: 1  # Hour
+  connMaxLifetime: 12  # Hour
 
 kafka:
   brokerList:

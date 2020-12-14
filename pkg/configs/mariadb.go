@@ -11,5 +11,6 @@ type MariadbConfiguration struct {
 	Name            string
 	MaxIdleConns    int
 	MaxOpenConns    int
+	ConnMaxIdleTime time.Duration
 	ConnMaxLifetime time.Duration
 }

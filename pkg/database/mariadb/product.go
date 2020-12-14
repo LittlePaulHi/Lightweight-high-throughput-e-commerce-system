@@ -59,9 +59,18 @@ func (product *Product) UpdateProduct() (*Product, error) {
 	return product, nil
 }
 
+type AllProducts struct {
+	ID        int
+	Name      string
+	Price     int
+	Quantity  int
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 // FindAllProducts finds all the products
-func FindAllProducts() ([]*Product, error) {
-	products := []*Product{}
+func FindAllProducts() ([]*AllProducts, error) {
+	var products []*AllProducts
 	err := db.Model(&Product{}).Find(&products).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
