@@ -51,13 +51,13 @@ func UpdateCart(cartID int, productID int, quantity int) (*Cart, error) {
 	}
 
 	// check the updated cart
-	var cart *Cart
+	var cart Cart
 	err := tx.Model(&Cart{}).Where("ID = ?", cartID).Take(&cart).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
 
-	return cart, nil
+	return &cart, nil
 }
 
 // FindAllCartsByCardIDs find all the carts by specified CartIDs
