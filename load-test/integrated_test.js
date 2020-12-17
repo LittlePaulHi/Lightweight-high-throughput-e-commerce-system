@@ -78,7 +78,7 @@ export let options = {
 
 
 const BASE_URL = 'http://pp-final.garyxiao.me:3080';
-
+export const errors = new Counter("errors");
 
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
@@ -92,6 +92,8 @@ export function getallproducts() {
     const checkRes = check(res, {
         'status is 200': (r) => r.status === 200,
     });
+
+    errors.add(!checkRes);
 
     sleep(500);
 }
@@ -109,6 +111,8 @@ export function getAllOrderByAccountID() {
         'status is 200': (r) => r.status === 200,
     });
 
+    errors.add(!checkRes);
+
     sleep(500);
 }
 
@@ -123,7 +127,8 @@ export function getAllOrderItemsByOrderID() {
     let quantity; 
     
     if(order.length == 0) {
-        check(res_get, { 'status is 200': (r) => r.status === 200, });
+        let checkRes = check(res_get, { 'status is 200': (r) => r.status === 200, });
+        errors.add(!checkRes);
         sleep(500);
         return;
     }
@@ -139,10 +144,11 @@ export function getAllOrderItemsByOrderID() {
     
     if(res_getitem.status != 200)
         console.log(`[${__VU}] Response status: ${res_getitem.status}`);
-    
     const checkRes = check(res_getitem, {
         'status is 200': (r) => r.status === 200,
     });
+
+    errors.add(!checkRes);
    
     sleep(300);
 }
@@ -159,6 +165,8 @@ export function getAllCartsByAccountID() {
     const checkRes = check(res, {
         'status is 200': (r) => r.status === 200,
     });
+
+    errors.add(!checkRes);
 
     sleep(500);
 }
@@ -180,6 +188,8 @@ export function addCart() {
         'status is 200': (r) => r.status === 200,
     });
 
+    errors.add(!checkRes);
+
     sleep(500);
 }
 
@@ -194,8 +204,8 @@ export function editCart() {
     let quantity;
 
     if(cart.length == 0) {
-        check(res_get, { 'status is 200': (r) => r.status === 200, });
-        sleep(500);
+        let checkRes = check(res_get, { 'status is 200': (r) => r.status === 200, });
+        errors.add(!checkRes);
         return;
     }
     else {
@@ -216,6 +226,8 @@ export function editCart() {
       'status is 200': (r) => r.status === 200,
     });
 
+    errors.add(!checkRes);
+
     sleep(300);
 }
 
@@ -227,8 +239,8 @@ export function PurchaseFromCarts() {
     let data = JSON.parse(res_get.body).data;
 
     if (data.hasOwnProperty("cart") == false) {
-        check(res_get, { 'status is 200': (r) => r.status === 200, });
-        sleep(500);
+        let checkRes = check(res_get, { 'status is 200': (r) => r.status === 200, });
+        errors.add(!checkRes);
         return;
     }
 
@@ -236,8 +248,8 @@ export function PurchaseFromCarts() {
     let cartids = [];
 
     if(cart.length == 0) {
-        check(res_get, { 'status is 200': (r) => r.status === 200, });
-        sleep(500);
+        let checkRes = check(res_get, { 'status is 200': (r) => r.status === 200, });
+        errors.add(!checkRes);
         return;
     }
     else {
@@ -259,6 +271,8 @@ export function PurchaseFromCarts() {
     const checkRes = check(res_post, {
         'status is 200': (r) => r.status === 200,
     });
+
+    errors.add(!checkRes);
 
     sleep(300);
 }

@@ -2,12 +2,8 @@ import http from 'k6/http';
 import { sleep, check } from 'k6';
 import { Counter } from 'k6/metrics';
 
-// A simple counter for http requests
-
+export const errors = new Counter("errors");
 export const requests = new Counter('http_reqs');
-
-// you can specify stages of your test (ramp up/down patterns) through the options object
-// target is the number of VUs you are aiming for
 
 const BASE_URL = 'http://pp-final.garyxiao.me:3080';
 
@@ -29,15 +25,15 @@ function getRandomInt(max) {
 }
 
 export default function () {
-  // our HTTP request, note that we are saving the response to res, which can be accessed later
+
   const params_get = { headers: { 'Content-Type': 'application/json', 'accountID': __VU, 'cartID': -1, 'productID': -1, 'quantity': -1 } };
   let res_get = http.get(`${BASE_URL}/api/cart/getAllByAccountID`, params_get);
 
   let data = JSON.parse(res_get.body).data;
   
   if (data.hasOwnProperty("cart") == false) {
-    check(res_get, { 'status is 200': (r) => r.status === 200, });
-    sleep(500);
+    checkRes = check(res_get, { 'status is 200': (r) => r.status === 200, });
+    errors.add(!checkRes);
     return;
   }
 
@@ -47,7 +43,8 @@ export default function () {
   let quantity;
 
   if(cart.length == 0) {
-    check(res_get, { 'status is 200': (r) => r.status === 200, });
+    let checkRes = check(res_get, { 'status is 200': (r) => r.status === 200, });
+    errors.add(!checkRes);
     return;
   }
   else {
@@ -56,8 +53,6 @@ export default function () {
   }
 
   sleep(200);
-
-  //console.log('Change ' + __VU + ' CartID: ' + cart[cartid]['ID'] + ' ProductID: ' + cart[cartid]['ProductID'] + ' to Quantity ' + quantity );
 
   const payload_post = JSON.stringify({ 'accountID': __VU, 'productID': cart[cartid]['ProductID'], 'quantity': quantity, 'cartID': cart[cartid]['ID'] });
   const params_post = { headers: { 'Content-Type': 'application/json' }};
@@ -69,6 +64,8 @@ export default function () {
   const checkRes = check(res_post, {
     'status is 200': (r) => r.status === 200,
   });
+
+  errors.add(!checkRes);
   
   sleep(300);
 }
