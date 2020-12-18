@@ -4,7 +4,6 @@ import { Counter } from 'k6/metrics';
 
 // A simple counter for http requests
 
-export const  errors = new Counter("errors");
 export const requests = new Counter('http_reqs');
 
 // you can specify stages of your test (ramp up/down patterns) through the options object
@@ -13,6 +12,7 @@ export const requests = new Counter('http_reqs');
 const BASE_URL = 'http://pp-final.garyxiao.me:3080';
 
 export const options = {
+  setupTimeout: '10m',
   stages: [
     { target: __ENV.TIMES, duration: '30s' },
     { target: __ENV.TIMES, duration: '1m' },
@@ -33,7 +33,7 @@ export function setup() {
 
   let carts = {};
 
-  for (let user=0; user < __ENV.TIMES; user++) {
+  for (let user=1; user <= __ENV.TIMES; user++) {
 
     let productid = getRandomInt(10000);
     let quantity = getRandomInt(2000);
@@ -42,7 +42,8 @@ export function setup() {
     const params = { headers: { 'Content-Type': 'application/json' }};
     let res_get = http.post(`${BASE_URL}/api/cart/addCart`, payload, params);
 
-    if(res_get.status == 200) {
+    if(res_get.status == 200)
+    {
       let data = JSON.parse(res_get.body).data;
       carts[user] = data["cart"];
     }
@@ -62,15 +63,9 @@ export default function (data) {
   const params_post = { headers: { 'Content-Type': 'application/json' } };
   let res_post = http.post(`${BASE_URL}/api/purchase/sync`, payload_post, params_post);  
 
-  if(res_post.status != 200)
-    console.log(`[${__VU}] Response status: ${res_post.status}`);
-
   const checkRes = check(res_post, {
     'status is 200': (r) => r.status === 200,
   });
 
-  errors.add(!checkRes);
-  
   sleep(500);
-
 }

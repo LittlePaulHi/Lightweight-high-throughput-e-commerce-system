@@ -2,12 +2,12 @@ import http from 'k6/http';
 import { sleep, check } from 'k6';
 import { Counter } from 'k6/metrics';
 
-export const errors = new Counter("errors");
 export const requests = new Counter('http_reqs');
 
 const BASE_URL = 'http://pp-final.garyxiao.me:3080';
 
 export const options = {
+  setupTimeout: '10m',
   stages: [
     { target: __ENV.TIMES, duration: '30s' },
     { target: __ENV.TIMES, duration: '1m' },
@@ -24,48 +24,36 @@ function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
 }
 
-export default function () {
+export function setup() {
 
-  const params_get = { headers: { 'Content-Type': 'application/json', 'accountID': __VU } };
-  let res_get = http.get(`${BASE_URL}/api/order/getAllByAccountID`, params_get);  
+  let orders = {};
 
-  let data = JSON.parse(res_get.body).data;
-
-  if (data.hasOwnProperty("orders") == false) {
-    let checkRes = check(res_get, { 'status is 200': (r) => r.status === 200, });
-    errors.add(!checkRes);
-    return;
+  for(let user=1; user <= __ENV.TIMES; user++) {
+    
+    const params_get = { headers: { 'Content-Type': 'application/json', 'accountID': user } };
+    let res_get = http.get(`${BASE_URL}/api/order/getAllByAccountID`, params_get);  
+  
+    if (res_get.status == 200) {
+      let data = JSON.parse(res_get.body).data;
+      orders[user] = data["orders"];
+    }
   }
 
-  let order = data["orders"];
+  return orders;
+}
 
-  let orderid;
-  let quantity;
+export default function (data) {
 
-  if(order.length == 0) {
-    let checkRes = check(res_get, { 'status is 200': (r) => r.status === 200, });
-    errors.add(!checkRes);
-    sleep(500);
-    return;
-  }
-  else {
-    orderid = getRandomInt(order.length);
-    quantity = getRandomInt(2000);
-  }
-
-  sleep(200);
+  let order = data[__VU];
+  
+  let orderid = order[getRandomInt(0)]["ID"];
 
   const params_getitem = { headers: { 'Content-Type': 'application/json', 'orderID': orderid } };
   let res_getitem = http.get(`${BASE_URL}/api/order/getAllItemsByOrderID`, params_getitem);
 
-  if(res_getitem.status != 200)
-    console.log(`[${__VU}] Response status: ${res_getitem.status}`);
-
   const checkRes = check(res_getitem, {
     'status is 200': (r) => r.status === 200,
   });
-  
-  errors.add(!checkRes);
 
   sleep(300);
 }
