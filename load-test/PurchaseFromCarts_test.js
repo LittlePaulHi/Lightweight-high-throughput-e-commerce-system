@@ -29,36 +29,34 @@ function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
 }
 
-export default function () {
+export function setup() {
 
-  const params_get = { headers: { 'Content-Type': 'application/json', 'accountID': __VU, 'cartID': -1, 'productID': -1, 'quantity': -1 } };
-  let res_get = http.get(`${BASE_URL}/api/cart/getAllByAccountID`, params_get);
+  let carts = {};
 
-  let data = JSON.parse(res_get.body).data;
+  for (let user=0; user < __ENV.TIMES; user++) {
 
-  if (data.hasOwnProperty("cart") == false) {
-    let checkRes = check(res_get, { 'status is 200': (r) => r.status === 200, });
-    errors.add(!checkRes);
-    return;
-  }
-
-  let cart = data["cart"];
+    let productid = getRandomInt(10000);
+    let quantity = getRandomInt(2000);
   
-  let cartids = [];
+    const payload = JSON.stringify({ 'accountID': user, 'productID': productid, 'quantity': quantity });
+    const params = { headers: { 'Content-Type': 'application/json' }};
+    let res_get = http.post(`${BASE_URL}/api/cart/addCart`, payload, params);
 
-  if(cart.length == 0) {
-    let checkRes = check(res_get, { 'status is 200': (r) => r.status === 200, });
-    errors.add(!checkRes);
-    return;
-  }
-  else {
-    let num_of_carts = getRandomInt(cart.length);
-    for (let step = 0; step < num_of_carts; step ++) {
-      cartids.push(cart[getRandomInt(cart.length)]['ID']);
+    if(res_get.status == 200) {
+      let data = JSON.parse(res_get.body).data;
+      carts[user] = data["cart"];
     }
   }
+  return carts;
+}
 
-  sleep(100);
+export default function (data) {
+
+  let cart = data[__VU];
+ 
+  let cartids = [];
+
+  cartids.push(cart['ID']);
 
   const payload_post = JSON.stringify({ 'accountID': __VU, 'cartIDs': cartids });
   const params_post = { headers: { 'Content-Type': 'application/json' } };
