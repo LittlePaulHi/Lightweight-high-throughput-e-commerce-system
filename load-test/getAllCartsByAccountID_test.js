@@ -15,7 +15,7 @@ const BASE_URL = 'http://192.168.0.1:9101'
 export const options = {
   stages: [
     //{ target: 3000, duration: '30s' },
-    { target: 6000, duration: '30s' },
+    { target: 8000, duration: '1m' },
     //{ target: 2000, duration: '1m' },
   ],
   thresholds: {
