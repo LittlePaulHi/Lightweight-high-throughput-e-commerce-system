@@ -15,6 +15,10 @@ import (
 // @Success 200
 // @Failure 500
 func GetAllProducts(c *gin.Context) {
+	if MaxGoRoutines != 0 {
+		<-GoRoutineSemaPhore
+	}
+
 	responseGin := ResponseGin{Context: c}
 
 	var httpStatus string
@@ -36,4 +40,8 @@ func GetAllProducts(c *gin.Context) {
 
 	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
+
+	if MaxGoRoutines != 0 {
+		GoRoutineSemaPhore<-1
+	}
 }

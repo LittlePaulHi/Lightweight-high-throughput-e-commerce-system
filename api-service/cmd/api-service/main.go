@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"flag"
 
 	"golang.org/x/sync/errgroup"
 
@@ -20,6 +21,7 @@ import (
 var (
 	eg            errgroup.Group
 	configuration config.Configuration
+	maxGoroutines int
 )
 
 func init() {
@@ -28,6 +30,19 @@ func init() {
 	viper.SetConfigName("config-server")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("$PROJECT_PATH/api-service/config/")
+
+	flag.IntVar(&maxGoroutines, "g", 0, "max number of go-routines")
+	flag.Parse()
+	api.MaxGoRoutines = maxGoroutines
+
+	if maxGoroutines != 0 {
+		api.GoRoutineSemaPhore = make(chan uint8, api.MaxGoRoutines)
+		for i := 0; i < maxGoroutines; i++ {
+			api.GoRoutineSemaPhore <- 1
+		}
+	}
+
+	logger.APILog.Infoln("Max Go routines: ", api.MaxGoRoutines)
 
 	if err := viper.ReadInConfig(); err != nil {
 		logger.InitLog.Errorf("Error when reading config file, %s", err)

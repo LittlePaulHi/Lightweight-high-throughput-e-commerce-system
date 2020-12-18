@@ -9,13 +9,14 @@ export const requests = new Counter('http_reqs');
 // you can specify stages of your test (ramp up/down patterns) through the options object
 // target is the number of VUs you are aiming for
 
-const BASE_URL = 'http://pp-final.garyxiao.me:3080';
+//const BASE_URL = 'http://pp-final.garyxiao.me:3080';
+const BASE_URL = 'http://192.168.0.1:9101'
 
 export const options = {
   stages: [
-    { target: __ENV.TIMES, duration: '30s' },
-    { target: __ENV.TIMES, duration: '1m' },
-    { target: __ENV.TIMES, duration: '30s' },
+    //{ target: 3000, duration: '30s' },
+    { target: 6000, duration: '30s' },
+    //{ target: 2000, duration: '1m' },
   ],
   thresholds: {
     Errors: ['count < 10'],
