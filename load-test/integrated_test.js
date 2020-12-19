@@ -1,6 +1,13 @@
 import http from 'k6/http';
 import { check, group, sleep, fail} from 'k6';
 import { Counter } from 'k6/metrics';
+import redis from 'k6/x/redis';
+
+const client = new redis.Client({
+  addr: 'localhost:6379',
+  password: '',
+  db: 0,
+});
 
 export let options = {
   setupTimeout: '10m',
@@ -79,10 +86,6 @@ export let options = {
 
 
 const BASE_URL = 'http://pp-final.garyxiao.me:3080';
-export const errors = new Counter("errors");
-let order_data = {};
-let cart_data = {};
-
 
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
@@ -90,21 +93,25 @@ function getRandomInt(max) {
 
 
 export function setup() {
-  for (let user = 1; user <= __ENV.TIMES * 5 ; user ++) {
-    const params_order = { headers: { 'Content-Type': 'application/json', 'accountID': __VU } };	   
+  
+  for (let user = 1; user <= 5 * __ENV.TIMES; user ++) {
+    const params_order = { headers: { 'Content-Type': 'application/json', 'accountID': user } };	   
     let res_order = http.get(`${BASE_URL}/api/order/getAllByAccountID`, params_order);
 
     if(res_order.status == 200) {
-      order_data[__VU] = res_order["orders"];
+      let data = JSON.parse(res_order.body).data;
+      client.set('order_data ' + user, JSON.stringify(data["orders"]), 0);
     }
 
-    const params_cart = { headers: { 'Content-Type': 'application/json', 'accountID': __VU, 'cartID': -1, 'productID': -1, 'quantity': -1 } };
+    const params_cart = { headers: { 'Content-Type': 'application/json', 'accountID': user, 'cartID': -1, 'productID': -1, 'quantity': -1 } };
     let res_cart = http.get(`${BASE_URL}/api/cart/getAllByAccountID`, params_cart);
 
     if (res_cart.status == 200) {
-      cart_data[__VU] = res_cart["cart"];
+      let data = JSON.parse(res_cart.body).data;
+      client.set('cart_data ' + user, JSON.stringify(data["cart"]), 0);
     }
   }
+  sleep(5);
 }
 
 
@@ -130,7 +137,8 @@ export function getAllOrderByAccountID() {
     });
 
     if(res.status == 200) {
-      order_data[__VU] = res["orders"];
+      let data = JSON.parse(res.body).data;
+      client.set('order_data ' + __VU, JSON.stringify(data["orders"]), 0);
     }
     
     sleep(500);
@@ -139,7 +147,8 @@ export function getAllOrderByAccountID() {
 
 export function getAllOrderItemsByOrderID() {
 
-    let order = order_data[__VU];
+    let order = JSON.parse(client.get('order_data ' + __VU));
+
     let orderid = order[getRandomInt(order.length)]["ID"];
   
     const params_getitem = { headers: { 'Content-Type': 'application/json', 'orderID': orderid } };
@@ -181,8 +190,9 @@ export function addCart() {
 
     if(res.status == 200) {
       let data = JSON.parse(res.body).data;
-      
-      cart_data[__VU].push(data["cart"]);    
+      let cart = JSON.parse(client.get('cart_data ' + __VU));
+      cart.push(data["cart"]);
+      client.set('cart_data ' + __VU, JSON.stringify(cart), 0);
     }  
   
     sleep(500);
@@ -191,11 +201,10 @@ export function addCart() {
 
 export function editCart() {
 
-    let cart = cart_data[__VU];
-    console.log(cart);
+    let cart = JSON.parse(client.get('cart_data ' + __VU));
     let cartid = getRandomInt(cart.length);
     let quantity = getRandomInt(2000);
-  
+      
     const payload_post = JSON.stringify({ 'accountID': __VU, 'productID': cart[cartid]['ProductID'], 'quantity': quantity, 'cartID': cart[cartid]['ID'] });
     const params_post = { headers: { 'Content-Type': 'application/json' }};
     let res_post = http.post(`${BASE_URL}/api/cart/editCart`, payload_post, params_post);
@@ -204,12 +213,10 @@ export function editCart() {
       'status is 200': (r) => r.status === 200,
     });  
 
-    if(res.status == 200) {
-      let data = JSON.parse(res.body).data;
-      for (let items = 0; items < cart_data[__VU].length; items ++) {
-        if(cart_data[__VU][items]["ID"] == data["cart"]["ID"])
-          cart_data[__VU].push(data["cart"]);
-      }
+    if(res_post.status == 200) {
+      let data = JSON.parse(res_post.body).data;
+      cart[cartid] = JSON.parse(JSON.stringify(data["carts"]));
+      client.set('cart_data ' + __VU, JSON.stringify(data["carts"]), 0);
     }  
   
     sleep(500);
@@ -218,10 +225,12 @@ export function editCart() {
 
 export function PurchaseFromCarts() {
 
-    let cart = cart_data[__VU];
+    let cart = JSON.parse(client.get('cart_data ' + __VU));
+
     let cartids = [];
 
-    cartids.push(cart['ID']);
+    for (let items = 0; items < cart.length; items ++)
+      cartids.push(cart[items]["ID"]);
   
     const payload_post = JSON.stringify({ 'accountID': __VU, 'cartIDs': cartids });
     const params_post = { headers: { 'Content-Type': 'application/json' } };
