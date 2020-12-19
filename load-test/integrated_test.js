@@ -15,71 +15,71 @@ export let options = {
       Stage1_getallproducts: {
         executor: 'constant-arrival-rate',
         exec: 'getallproducts',
-        rate: 30*__ENV.TIMES/10,
+        rate: 3 * __ENV.TIMES,
         timeUnit: '1s',
         duration: '5m',
-        preAllocatedVUs: 25*__ENV.TIMES/10,
-        maxVUs: 35*__ENV.TIMES/10
+        preAllocatedVUs: 3 * __ENV.TIMES,
+        maxVUs: 3 * __ENV.TIMES
       },
       Stage1_getAllOrderByAccountID: {
         executor: 'constant-arrival-rate',
         exec: 'getAllOrderByAccountID',
-        rate: 15*__ENV.TIMES/10,
+        rate: 1.5 * __ENV.TIMES,
         timeUnit: '1s',
         duration: '2m',
         startTime: '2.5m',
-        preAllocatedVUs: 10*__ENV.TIMES/10,
-        maxVUs: 20*__ENV.TIMES/10
+        preAllocatedVUs: 1.5 * __ENV.TIMES,
+        maxVUs: 1.5 * __ENV.TIMES
       },
       Stage1_getAllOrderItemsByOrderID: {
         executor: 'constant-arrival-rate',
         exec: 'getAllOrderItemsByOrderID',
-        rate: 15*__ENV.TIMES/10,
+        rate: 1.5 * __ENV.TIMES,
         timeUnit: '1s',
         duration: '2m',
         startTime: '3m',
-        preAllocatedVUs: 10*__ENV.TIMES/10,
-        maxVUs: 20*__ENV.TIMES/10
+        preAllocatedVUs: 1.5 * __ENV.TIMES,
+        maxVUs: 1.5 * __ENV.TIMES
       },
       Stage1_getAllCartsByAccountID: {
         executor: 'constant-arrival-rate',
         exec: 'getAllCartsByAccountID',
-        rate: 15*__ENV.TIMES/10,
+        rate: 1.5 * __ENV.TIMES,
         timeUnit: '1s',
         duration: '2m',
         startTime: '2m',
-        preAllocatedVUs: 10*__ENV.TIMES/10,
-        maxVUs: 20*__ENV.TIMES/10
+        preAllocatedVUs: 1.5 * __ENV.TIMES,
+        maxVUs: 1.5 * __ENV.TIMES
       },
       Stage1_addCart: {
         executor: 'constant-arrival-rate',
         exec: 'addCart',
-        rate: 11*__ENV.TIMES/10,
+        rate: 1.1 * __ENV.TIMES,
         timeUnit: '1s',
         duration: '2m',
         startTime: '1m',
-        preAllocatedVUs: 5*__ENV.TIMES/10,
-        maxVUs: 15*__ENV.TIMES/10
+        preAllocatedVUs: 1.1 * __ENV.TIMES,
+        maxVUs: 1.1 * __ENV.TIMES
       },
       Stage1_editCart: {
         executor: 'constant-arrival-rate',
         exec: 'editCart',
-        rate: 11*__ENV.TIMES/10,
+        rate: 1.1 * __ENV.TIMES,
         timeUnit: '1s',
         duration: '2m',
         startTime: '1.5m',
-        preAllocatedVUs: 5*__ENV.TIMES/10,
-        maxVUs: 15*__ENV.TIMES/10
+        preAllocatedVUs: 1.1 * __ENV.TIMES,
+        maxVUs: 1.1 * __ENV.TIMES
       },
       Stage1_PurchaseFromCarts: {
         executor: 'constant-arrival-rate',
         exec: 'PurchaseFromCarts',
-        rate: 3*__ENV.TIMES/10,
+        rate: 0.3 * __ENV.TIMES,
         timeUnit: '1s',
         duration: '2m',
         startTime: '3m',
-        preAllocatedVUs: 3*__ENV.TIMES/10,
-        maxVUs: 5*__ENV.TIMES/10
+        preAllocatedVUs: 0.3 * __ENV.TIMES,
+        maxVUs: 0.3 * __ENV.TIMES
       }
   }
 };
@@ -94,7 +94,7 @@ function getRandomInt(max) {
 
 export function setup() {
   
-  for (let user = 1; user <= 5 * __ENV.TIMES; user ++) {
+  for (let user = 1; user <= 10000; user ++) {
     const params_order = { headers: { 'Content-Type': 'application/json', 'accountID': user } };	   
     let res_order = http.get(`${BASE_URL}/api/order/getAllByAccountID`, params_order);
 
@@ -110,8 +110,8 @@ export function setup() {
       let data = JSON.parse(res_cart.body).data;
       client.set('cart_data ' + user, JSON.stringify(data["cart"]), 0);
     }
+    sleep(10);
   }
-  sleep(5);
 }
 
 
@@ -148,7 +148,6 @@ export function getAllOrderByAccountID() {
 export function getAllOrderItemsByOrderID() {
 
     let order = JSON.parse(client.get('order_data ' + __VU));
-
     let orderid = order[getRandomInt(order.length)]["ID"];
   
     const params_getitem = { headers: { 'Content-Type': 'application/json', 'orderID': orderid } };
@@ -226,7 +225,6 @@ export function editCart() {
 export function PurchaseFromCarts() {
 
     let cart = JSON.parse(client.get('cart_data ' + __VU));
-
     let cartids = [];
 
     for (let items = 0; items < cart.length; items ++)

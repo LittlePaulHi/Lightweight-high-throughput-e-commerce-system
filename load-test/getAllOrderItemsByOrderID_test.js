@@ -28,7 +28,7 @@ export function setup() {
 
   let orders = {};
 
-  for(let user=1; user <= __ENV.TIMES; user++) {
+  for(let user=1; user <= 10000; user++) {
     
     const params_get = { headers: { 'Content-Type': 'application/json', 'accountID': user } };
     let res_get = http.get(`${BASE_URL}/api/order/getAllByAccountID`, params_get);  
@@ -37,6 +37,7 @@ export function setup() {
       let data = JSON.parse(res_get.body).data;
       orders[user] = data["orders"];
     }
+    sleep(10);
   }
   return orders;
 }

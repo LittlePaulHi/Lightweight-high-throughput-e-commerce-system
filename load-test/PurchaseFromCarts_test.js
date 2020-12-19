@@ -33,7 +33,7 @@ export function setup() {
 
   let carts = {};
 
-  for (let user=1; user <= __ENV.TIMES; user++) {
+  for (let user=1; user <= 10000; user++) {
 
     let productid = getRandomInt(10000);
     let quantity = getRandomInt(2000);
@@ -47,6 +47,7 @@ export function setup() {
       let data = JSON.parse(res_get.body).data;
       carts[user] = data["cart"];
     }
+    sleep(10);
   }
   return carts;
 }

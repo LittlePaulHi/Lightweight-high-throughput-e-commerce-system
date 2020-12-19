@@ -27,15 +27,16 @@ export function setup() {
 
   let carts = {};
 
-  for (let user = 1; user <= __VU.TIMES; user ++) {
+  for (let user = 1; user <= 10000; user ++) {
     
     let params_get = { headers: { 'Content-Type': 'application/json', 'accountID': user, 'cartID': -1, 'productID': -1, 'quantity': -1 } };
     let res_get = http.get(`${BASE_URL}/api/cart/getAllByAccountID`, params_get);
   
     if (res_get.status == 200) {
       let data = JSON.parse(res_get.body).data;
-      carts[user] = JSON.parse(JSON.stringigy(data["cart"]));
+      carts[user] = JSON.parse(JSON.stringify(data["cart"]));
     }
+    sleep(10);
   }
   return carts;
 }
