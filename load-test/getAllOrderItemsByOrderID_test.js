@@ -38,7 +38,6 @@ export function setup() {
       orders[user] = data["orders"];
     }
   }
-
   return orders;
 }
 
@@ -46,7 +45,7 @@ export default function (data) {
 
   let order = data[__VU];
   
-  let orderid = order[getRandomInt(0)]["ID"];
+  let orderid = order[getRandomInt(order.length)]["ID"];
 
   const params_getitem = { headers: { 'Content-Type': 'application/json', 'orderID': orderid } };
   let res_getitem = http.get(`${BASE_URL}/api/order/getAllItemsByOrderID`, params_getitem);
@@ -55,5 +54,5 @@ export default function (data) {
     'status is 200': (r) => r.status === 200,
   });
 
-  sleep(300);
+  sleep(500);
 }

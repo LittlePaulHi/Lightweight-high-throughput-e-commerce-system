@@ -2,13 +2,7 @@ import http from 'k6/http';
 import { sleep, check } from 'k6';
 import { Counter } from 'k6/metrics';
 
-// A simple counter for http requests
-
-export const errors = new Counter("errors");
 export const requests = new Counter('http_reqs');
-
-// you can specify stages of your test (ramp up/down patterns) through the options object
-// target is the number of VUs you are aiming for
 
 const BASE_URL = 'http://pp-final.garyxiao.me:3080';
 
@@ -36,8 +30,6 @@ export default function () {
   const checkRes = check(res, {
     'status is 200': (r) => r.status === 200,
   });
-
-  errors.add(!checkRes);
   
   sleep(500);
 }

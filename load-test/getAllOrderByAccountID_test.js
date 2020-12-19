@@ -2,7 +2,6 @@ import http from 'k6/http';
 import { sleep, check } from 'k6';
 import { Counter } from 'k6/metrics';
 
-export const errors = new Counter("errors");
 export const requests = new Counter('http_reqs');
 
 const BASE_URL = 'http://pp-final.garyxiao.me:3080';
@@ -30,14 +29,9 @@ export default function () {
   
   let res = http.get(`${BASE_URL}/api/order/getAllByAccountID`, params);
 
-  if(res.status != 200)
-    console.log(`[${__VU}] Response status: ${res.status}`);
-
   const checkRes = check(res, {
     'status is 200': (r) => r.status === 200,
   });
   
-  errors.add(!checkRes);
-
   sleep(500);
 }

@@ -2,7 +2,6 @@ import http from 'k6/http';
 import { sleep, check } from 'k6';
 import { Counter } from 'k6/metrics';
 
-export const errors = new Counter("errors");
 export const requests = new Counter('http_reqs');
 
 const BASE_URL = 'http://pp-final.garyxiao.me:3080';
@@ -24,48 +23,35 @@ function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
 }
 
-export default function () {
+export function setup() {
 
-  const params_get = { headers: { 'Content-Type': 'application/json', 'accountID': __VU, 'cartID': -1, 'productID': -1, 'quantity': -1 } };
-  let res_get = http.get(`${BASE_URL}/api/cart/getAllByAccountID`, params_get);
+  let carts = {};
 
-  let data = JSON.parse(res_get.body).data;
+  for (let user = 1; user <= __VU.TIMES; user ++) {
+    
+    let params_get = { headers: { 'Content-Type': 'application/json', 'accountID': user, 'cartID': -1, 'productID': -1, 'quantity': -1 } };
+    let res_get = http.get(`${BASE_URL}/api/cart/getAllByAccountID`, params_get);
+    let data = JSON.parse(res_get.body).data;
   
-  if (data.hasOwnProperty("cart") == false) {
-    checkRes = check(res_get, { 'status is 200': (r) => r.status === 200, });
-    errors.add(!checkRes);
-    return;
+    carts[user] = data["cart"];
   }
+  return carts;
+}
 
-  let cart = data["cart"];
-  
-  let cartid;
-  let quantity;
+export default function (data) {
 
-  if(cart.length == 0) {
-    let checkRes = check(res_get, { 'status is 200': (r) => r.status === 200, });
-    errors.add(!checkRes);
-    return;
-  }
-  else {
-    cartid = getRandomInt(cart.length);
-    quantity = getRandomInt(2000);
-  }
+  let cart = data[__VU];
 
-  sleep(200);
+  let cartid = getRandomInt(cart.length);
+  let quantity = getRandomInt(2000);
 
   const payload_post = JSON.stringify({ 'accountID': __VU, 'productID': cart[cartid]['ProductID'], 'quantity': quantity, 'cartID': cart[cartid]['ID'] });
   const params_post = { headers: { 'Content-Type': 'application/json' }};
   let res_post = http.post(`${BASE_URL}/api/cart/editCart`, payload_post, params_post);
 
-  if(res_post.status != 200)
-    console.log(`[${__VU}] Response status: ${res_post.status}`);
-
   const checkRes = check(res_post, {
     'status is 200': (r) => r.status === 200,
-  });
+  });  
 
-  errors.add(!checkRes);
-  
-  sleep(300);
+  sleep(500);
 }

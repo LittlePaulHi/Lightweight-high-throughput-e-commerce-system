@@ -61,7 +61,7 @@ export default function (data) {
 
   const payload_post = JSON.stringify({ 'accountID': __VU, 'cartIDs': cartids });
   const params_post = { headers: { 'Content-Type': 'application/json' } };
-  let res_post = http.post(`${BASE_URL}/api/purchase/sync`, payload_post, params_post);  
+  let res_post = http.post(`${BASE_URL}/api/purchase/sync`, payload_post, params_post);
 
   const checkRes = check(res_post, {
     'status is 200': (r) => r.status === 200,
