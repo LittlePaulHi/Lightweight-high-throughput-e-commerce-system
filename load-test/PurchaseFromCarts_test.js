@@ -51,13 +51,15 @@ export function setup() {
   return carts;
 }
 
+
 export default function (data) {
 
   let cart = data[__VU];
  
   let cartids = [];
 
-  cartids.push(cart['ID']);
+  for (let items = 0; items < cart.length; items ++)
+    cartids.push(cart[items]['ID']);
 
   const payload_post = JSON.stringify({ 'accountID': __VU, 'cartIDs': cartids });
   const params_post = { headers: { 'Content-Type': 'application/json' } };
