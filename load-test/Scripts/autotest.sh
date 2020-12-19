@@ -14,7 +14,6 @@ do
                 echo ${partitions} ", " ${directory} ", " ${tag} ", " `date` ", start" >> result.txt
                 echo "Stop kafka"
                 ssh ppf204@kafka "cd ~/kafka-docker/;docker-compose stop;docker-compose rm -vfs"
-                sleep 0.5
         
                 echo "Stop redis"
                 ssh redis "cd ~/redis/;docker-compose stop;docker-compose rm -vfs"
@@ -30,9 +29,6 @@ do
         
                 echo "Start kafka"
                 ssh ppf204@kafka "cd ~/kafka-docker/; echo \"syncBuyEventTopic:${tag}:1\" > .env_file ;docker-compose -f ./docker-compose-single-broker.yml up -d --no-recreate"
-                sleep 0.5
-        
-                sleep 30s
         
                 echo "Start redis"
                 ssh redis "cd ~/redis/;docker-compose up -d"
@@ -46,7 +42,10 @@ do
                 sleep 2m
         
                 ./k6 run -e TIMES=${vus} --out influxdb=http://192.168.0.5:8086/${directory} "../${directory}.js"
+                
                 echo ${partitions} ", " ${directory} ", " ${tag} ", " `date` ", ended" >> result.txt
+
+                sleep 1m
             done
         done
     done
