@@ -10,14 +10,15 @@ const client = new redis.Client({
 });
 
 export let options = {
-  setupTimeout: '10m',
+  setupTimeout: '1h',
+  vusMax: 10000,
   scenarios: {
       Stage1_getallproducts: {
         executor: 'constant-arrival-rate',
         exec: 'getallproducts',
         rate: 3 * __ENV.TIMES,
         timeUnit: '1s',
-        duration: '5m',
+        duration: '2m',
         preAllocatedVUs: 3 * __ENV.TIMES,
         maxVUs: 3 * __ENV.TIMES
       },
@@ -27,49 +28,49 @@ export let options = {
         rate: 1.5 * __ENV.TIMES,
         timeUnit: '1s',
         duration: '2m',
-        startTime: '2.5m',
+        startTime: '4m',
         preAllocatedVUs: 1.5 * __ENV.TIMES,
         maxVUs: 1.5 * __ENV.TIMES
       },
       Stage1_getAllOrderItemsByOrderID: {
         executor: 'constant-arrival-rate',
         exec: 'getAllOrderItemsByOrderID',
-        rate: 1.5 * __ENV.TIMES,
+        rate: 1.4 * __ENV.TIMES,
         timeUnit: '1s',
         duration: '2m',
-        startTime: '3m',
-        preAllocatedVUs: 1.5 * __ENV.TIMES,
-        maxVUs: 1.5 * __ENV.TIMES
+        startTime: '5m',
+        preAllocatedVUs: 1.4 * __ENV.TIMES,
+        maxVUs: 1.4 * __ENV.TIMES
       },
       Stage1_getAllCartsByAccountID: {
         executor: 'constant-arrival-rate',
         exec: 'getAllCartsByAccountID',
-        rate: 1.5 * __ENV.TIMES,
+        rate: 1.4 * __ENV.TIMES,
         timeUnit: '1s',
         duration: '2m',
         startTime: '2m',
-        preAllocatedVUs: 1.5 * __ENV.TIMES,
-        maxVUs: 1.5 * __ENV.TIMES
+        preAllocatedVUs: 1.4 * __ENV.TIMES,
+        maxVUs: 1.4 * __ENV.TIMES
       },
       Stage1_addCart: {
         executor: 'constant-arrival-rate',
         exec: 'addCart',
-        rate: 1.1 * __ENV.TIMES,
+        rate: 1.2 * __ENV.TIMES,
         timeUnit: '1s',
         duration: '2m',
         startTime: '1m',
-        preAllocatedVUs: 1.1 * __ENV.TIMES,
-        maxVUs: 1.1 * __ENV.TIMES
+        preAllocatedVUs: 1.2 * __ENV.TIMES,
+        maxVUs: 1.2 * __ENV.TIMES
       },
       Stage1_editCart: {
         executor: 'constant-arrival-rate',
         exec: 'editCart',
-        rate: 1.1 * __ENV.TIMES,
+        rate: 1.2 * __ENV.TIMES,
         timeUnit: '1s',
         duration: '2m',
-        startTime: '1.5m',
-        preAllocatedVUs: 1.1 * __ENV.TIMES,
-        maxVUs: 1.1 * __ENV.TIMES
+        startTime: '2.5m',
+        preAllocatedVUs: 1.2 * __ENV.TIMES,
+        maxVUs: 1.2 * __ENV.TIMES
       },
       Stage1_PurchaseFromCarts: {
         executor: 'constant-arrival-rate',
@@ -77,7 +78,7 @@ export let options = {
         rate: 0.3 * __ENV.TIMES,
         timeUnit: '1s',
         duration: '2m',
-        startTime: '3m',
+        startTime: '4.5m',
         preAllocatedVUs: 0.3 * __ENV.TIMES,
         maxVUs: 0.3 * __ENV.TIMES
       }
@@ -93,8 +94,14 @@ function getRandomInt(max) {
 
 
 export function setup() {
-  
-  for (let user = 1; user <= 10000; user ++) {
+
+  let users = 10000;
+
+  if(__ENV.TIMES * 2 < users)
+    users = __ENV.TIMES * 2;
+
+  for (let user = 1; user <= users; user ++) {
+    
     const params_order = { headers: { 'Content-Type': 'application/json', 'accountID': user } };	   
     let res_order = http.get(`${BASE_URL}/api/order/getAllByAccountID`, params_order);
 
@@ -110,7 +117,7 @@ export function setup() {
       let data = JSON.parse(res_cart.body).data;
       client.set('cart_data ' + user, JSON.stringify(data["cart"]), 0);
     }
-    sleep(10);
+    sleep(1);
   }
 }
 

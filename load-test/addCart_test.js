@@ -7,6 +7,7 @@ export const requests = new Counter('http_reqs');
 const BASE_URL = 'http://pp-final.garyxiao.me:3080';
 
 export const options = {
+  vusMax: 10000,
   stages: [
     { target: __ENV.TIMES, duration: '30s' },
     { target: __ENV.TIMES, duration: '1m' },

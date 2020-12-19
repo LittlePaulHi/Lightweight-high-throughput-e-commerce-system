@@ -6,7 +6,7 @@ tag="async"
 
 for directory in "${stages[@]}"
 do
-    for ((vus=10; vus<=10;vus+=500))
+    for ((vus=200; vus<=1000;vus+=200))
     do
         echo "Stop kafka"
         ssh ppf204@kafka "cd ~/kafka-docker/;docker-compose stop;docker-compose rm -vfs"

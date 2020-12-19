@@ -8,6 +8,7 @@ const BASE_URL = 'http://pp-final.garyxiao.me:3080';
 
 export const options = {
   setupTimeout: '10m',
+  vusMax: 10000,
   stages: [
     { target: __ENV.TIMES, duration: '30s' },
     { target: __ENV.TIMES, duration: '1m' },
@@ -27,8 +28,12 @@ function getRandomInt(max) {
 export function setup() {
 
   let orders = {};
+  let users = 10000;
 
-  for(let user=1; user <= 10000; user++) {
+  if(__ENV.TIMES * 2 < users)
+    users = __ENV.TIMES * 2;
+
+  for (let user = 1; user <= users; user ++) {
     
     const params_get = { headers: { 'Content-Type': 'application/json', 'accountID': user } };
     let res_get = http.get(`${BASE_URL}/api/order/getAllByAccountID`, params_get);  

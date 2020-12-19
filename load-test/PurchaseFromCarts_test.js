@@ -13,6 +13,7 @@ const BASE_URL = 'http://pp-final.garyxiao.me:3080';
 
 export const options = {
   setupTimeout: '10m',
+  vusMax: 10000,
   stages: [
     { target: __ENV.TIMES, duration: '30s' },
     { target: __ENV.TIMES, duration: '1m' },
@@ -32,8 +33,12 @@ function getRandomInt(max) {
 export function setup() {
 
   let carts = {};
+  let users = 10000;
 
-  for (let user=1; user <= 10000; user++) {
+  if(__ENV.TIMES * 2 < users)
+    users = __ENV.TIMES * 2;
+
+  for (let user = 1; user <= users; user ++) {
 
     let productid = getRandomInt(10000);
     let quantity = getRandomInt(2000);
