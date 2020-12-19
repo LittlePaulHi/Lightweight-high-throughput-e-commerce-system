@@ -31,9 +31,11 @@ export function setup() {
     
     let params_get = { headers: { 'Content-Type': 'application/json', 'accountID': user, 'cartID': -1, 'productID': -1, 'quantity': -1 } };
     let res_get = http.get(`${BASE_URL}/api/cart/getAllByAccountID`, params_get);
-    let data = JSON.parse(res_get.body).data;
   
-    carts[user] = data["cart"];
+    if (res_get.status == 200) {
+      let data = JSON.parse(res_get.body).data;
+      carts[user] = JSON.parse(JSON.stringigy(data["cart"]));
+    }
   }
   return carts;
 }
@@ -41,7 +43,6 @@ export function setup() {
 export default function (data) {
 
   let cart = data[__VU];
-
   let cartid = getRandomInt(cart.length);
   let quantity = getRandomInt(2000);
 
