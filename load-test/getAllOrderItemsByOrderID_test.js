@@ -42,8 +42,8 @@ export function setup() {
       let data = JSON.parse(res_get.body).data;
       orders[user] = data["orders"];
     }
-    sleep(10);
   }
+  sleep(5);
   return orders;
 }
 

@@ -117,8 +117,8 @@ export function setup() {
       let data = JSON.parse(res_cart.body).data;
       client.set('cart_data ' + user, JSON.stringify(data["cart"]), 0);
     }
-    sleep(1);
   }
+  sleep(5);
 }
 
 
