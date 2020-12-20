@@ -56,7 +56,7 @@ func CrateNewSyncProducer() sarama.SyncProducer {
 	sarama.Logger = log.New(os.Stdout, "", log.Ltime)
 
 	sconfig := sarama.NewConfig()
-	sconfig.Producer.Partitioner = sarama.NewRoundRobinPartitioner
+	sconfig.Producer.Partitioner = sarama.NewRandomPartitioner
 	sconfig.Producer.RequiredAcks = sarama.WaitForAll // Wait for all in-sync replicas to ack the message
 	sconfig.Producer.Retry.Max = 10
 	sconfig.Producer.Return.Successes = true
