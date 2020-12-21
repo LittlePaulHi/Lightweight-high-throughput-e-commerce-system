@@ -166,30 +166,19 @@ func updateTables(carts []*mariadb.Cart, newOrder mariadb.Order, accountID int) 
 			break
 		}
 
-		product, err := mariadb.FindProductByID(cart.ProductID)
+		product, err := mariadb.PurchaseProduct(cart.ProductID, cart.Quantity)
 		if err != nil {
-			logger.KafkaConsumer.Warnf("Get product in consumer occurs error: %v\n", err)
-			return "", err
+			logger.KafkaConsumer.Printf("Purchase occurs error: %v", err)
+			continue
 		}
 
-		if product.Quantity >= cart.Quantity {
-			product.Quantity -= cart.Quantity
-			if _, err := product.UpdateProduct(); err != nil {
-				logger.KafkaConsumer.Printf("Purchase the prouct %v occurs error: %v", product.Name, err)
-				continue
-			}
-
-			orderItem := mariadb.OrderItem{}
-			orderItem.Initialize(newOrder.ID, cart.ProductID, cart.Quantity)
-			if _, err = orderItem.SaveOrderItem(); err != nil {
-				logger.KafkaConsumer.Printf("Save the orderItem with product %v occurs error: %v", product.Name, err)
-				continue
-			}
-
-			amounts += product.Price * cart.Quantity
-		} else {
-			logger.KafkaConsumer.Printf("Product %v already sold out", product.Name)
+		orderItem := mariadb.OrderItem{}
+		orderItem.Initialize(newOrder.ID, cart.ProductID, cart.Quantity)
+		if _, err = orderItem.SaveOrderItem(); err != nil {
+			logger.KafkaConsumer.Printf("Save the orderItem with product %v occurs error: %v", product.Name, err)
 		}
+
+		amounts += product.Price * cart.Quantity
 	}
 
 	if amounts == 0 || amounts > account.Amount {
