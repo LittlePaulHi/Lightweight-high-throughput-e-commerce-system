@@ -14,11 +14,9 @@ const BASE_URL = 'http://pp-final.garyxiao.me:3080';
 export const options = {
   setupTimeout: '10m',
   vusMax: 10000,
-  stages: [
-    { target: __ENV.TIMES, duration: '30s' },
-    { target: __ENV.TIMES, duration: '1m' },
-    { target: __ENV.TIMES, duration: '30s' },
-  ],
+  duration: '1m',
+  vus: __ENV.TIMES,
+  iterations: __ENV.TIMES * 60,
   thresholds: {
     Errors: ['count < 10'],
     http_req_duration: ['avg < 2000'],
@@ -50,10 +48,14 @@ export function setup() {
     if(res_get.status == 200)
     {
       let data = JSON.parse(res_get.body).data;
-      carts[user] = data["cart"];
+      carts[user] = [JSON.parse(JSON.stringify(data["cart"]))];
     }
-    sleep(10);
+    else
+      carts[user] = [];
   }
+  
+  sleep(5);
+  
   return carts;
 }
 
@@ -61,11 +63,12 @@ export function setup() {
 export default function (data) {
 
   let cart = data[__VU];
- 
+
   let cartids = [];
 
-  for (let items = 0; items < cart.length; items ++)
+  for (let items = 0; items < cart.length; items ++) {
     cartids.push(cart[items]['ID']);
+  }
 
   const payload_post = JSON.stringify({ 'accountID': __VU, 'cartIDs': cartids });
   const params_post = { headers: { 'Content-Type': 'application/json' } };
@@ -75,5 +78,5 @@ export default function (data) {
     'status is 200': (r) => r.status === 200,
   });
 
-  sleep(500);
+  sleep(0.5);
 }

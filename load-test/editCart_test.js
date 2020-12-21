@@ -8,11 +8,9 @@ const BASE_URL = 'http://pp-final.garyxiao.me:3080';
 
 export const options = {
   vusMax: 10000,
-  stages: [
-    { target: __ENV.TIMES, duration: '30s' },
-    { target: __ENV.TIMES, duration: '1m' },
-    { target: __ENV.TIMES, duration: '30s' },
-  ],
+  duration: '1m',
+  vus: __ENV.TIMES,
+  iterations: __ENV.TIMES * 60,
   thresholds: {
     Errors: ['count < 10'],
     http_req_duration: ['avg < 2000'],
@@ -41,8 +39,10 @@ export function setup() {
       let data = JSON.parse(res_get.body).data;
       carts[user] = JSON.parse(JSON.stringify(data["cart"]));
     }
-    sleep(10);
   }
+
+  sleep(1);
+
   return carts;
 }
 
@@ -60,5 +60,5 @@ export default function (data) {
     'status is 200': (r) => r.status === 200,
   });  
 
-  sleep(500);
+  sleep(0.5);
 }

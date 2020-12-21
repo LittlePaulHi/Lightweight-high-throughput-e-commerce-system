@@ -14,73 +14,53 @@ export let options = {
   vusMax: 10000,
   scenarios: {
       Stage1_getallproducts: {
-        executor: 'constant-arrival-rate',
+        executor: 'shared-iterations',
         exec: 'getallproducts',
-        rate: 3 * __ENV.TIMES,
-        timeUnit: '1s',
-        duration: '2m',
-        preAllocatedVUs: 3 * __ENV.TIMES,
-        maxVUs: 3 * __ENV.TIMES
+        iterations: __ENV.TIMES * 60 * 0.3,
+        maxDuration: '1m',
+        vus: __ENV.TIMES * 0.3
       },
       Stage1_getAllOrderByAccountID: {
-        executor: 'constant-arrival-rate',
+        executor: 'shared-iterations',
         exec: 'getAllOrderByAccountID',
-        rate: 1.5 * __ENV.TIMES,
-        timeUnit: '1s',
-        duration: '2m',
-        startTime: '4m',
-        preAllocatedVUs: 1.5 * __ENV.TIMES,
-        maxVUs: 1.5 * __ENV.TIMES
+        iterations: __ENV.TIMES * 60 * 0.15,
+        maxDuration: '1m',
+        vus: __ENV.TIMES  * 0.15
       },
       Stage1_getAllOrderItemsByOrderID: {
-        executor: 'constant-arrival-rate',
+        executor: 'shared-iterations',
         exec: 'getAllOrderItemsByOrderID',
-        rate: 1.4 * __ENV.TIMES,
-        timeUnit: '1s',
-        duration: '2m',
-        startTime: '5m',
-        preAllocatedVUs: 1.4 * __ENV.TIMES,
-        maxVUs: 1.4 * __ENV.TIMES
+        iterations: __ENV.TIMES * 60 * 0.14,
+        maxDuration: '1m',
+        vus: __ENV.TIMES  * 0.14
       },
       Stage1_getAllCartsByAccountID: {
-        executor: 'constant-arrival-rate',
+        executor: 'shared-iterations',
         exec: 'getAllCartsByAccountID',
-        rate: 1.4 * __ENV.TIMES,
-        timeUnit: '1s',
-        duration: '2m',
-        startTime: '2m',
-        preAllocatedVUs: 1.4 * __ENV.TIMES,
-        maxVUs: 1.4 * __ENV.TIMES
+        iterations: __ENV.TIMES * 60 * 0.14,
+        maxDuration: '1m',
+        vus: __ENV.TIMES  * 0.14
       },
       Stage1_addCart: {
-        executor: 'constant-arrival-rate',
+        executor: 'shared-iterations',
         exec: 'addCart',
-        rate: 1.2 * __ENV.TIMES,
-        timeUnit: '1s',
-        duration: '2m',
-        startTime: '1m',
-        preAllocatedVUs: 1.2 * __ENV.TIMES,
-        maxVUs: 1.2 * __ENV.TIMES
+        iterations: __ENV.TIMES * 60 * 0.12,
+        maxDuration: '1m',
+        vus: __ENV.TIMES  * 0.12
       },
       Stage1_editCart: {
-        executor: 'constant-arrival-rate',
+        executor: 'shared-iterations',
         exec: 'editCart',
-        rate: 1.2 * __ENV.TIMES,
-        timeUnit: '1s',
-        duration: '2m',
-        startTime: '2.5m',
-        preAllocatedVUs: 1.2 * __ENV.TIMES,
-        maxVUs: 1.2 * __ENV.TIMES
+        iterations: __ENV.TIMES * 60 * 0.12,
+        maxDuration: '1m',
+        vus: __ENV.TIMES  * 0.12
       },
       Stage1_PurchaseFromCarts: {
-        executor: 'constant-arrival-rate',
+        executor: 'shared-iterations',
         exec: 'PurchaseFromCarts',
-        rate: 0.3 * __ENV.TIMES,
-        timeUnit: '1s',
-        duration: '2m',
-        startTime: '4.5m',
-        preAllocatedVUs: 0.3 * __ENV.TIMES,
-        maxVUs: 0.3 * __ENV.TIMES
+        iterations: __ENV.TIMES * 60 * 0.03,
+        maxDuration: '1m',
+        vus: __ENV.TIMES  * 0.03
       }
   }
 };
@@ -95,12 +75,7 @@ function getRandomInt(max) {
 
 export function setup() {
 
-  let users = 10000;
-
-  if(__ENV.TIMES * 2 < users)
-    users = __ENV.TIMES * 2;
-
-  for (let user = 1; user <= users; user ++) {
+  for (let user = 1; user <= __ENV.TIMES; user ++) {
     
     const params_order = { headers: { 'Content-Type': 'application/json', 'accountID': user } };	   
     let res_order = http.get(`${BASE_URL}/api/order/getAllByAccountID`, params_order);
@@ -130,7 +105,7 @@ export function getallproducts() {
       'status is 200': (r) => r.status === 200,
     });
     
-    sleep(500);
+    sleep(0.5);
 }
 
 
@@ -148,7 +123,7 @@ export function getAllOrderByAccountID() {
       client.set('order_data ' + __VU, JSON.stringify(data["orders"]), 0);
     }
     
-    sleep(500);
+    sleep(0.5);
 }
 
 
@@ -164,7 +139,7 @@ export function getAllOrderItemsByOrderID() {
       'status is 200': (r) => r.status === 200,
     });
   
-    sleep(500);
+    sleep(0.5);
 }
 
 
@@ -177,7 +152,7 @@ export function getAllCartsByAccountID() {
       'status is 200': (r) => r.status === 200,
     });
 
-    sleep(500);
+    sleep(0.5);
 }
 
 
@@ -201,7 +176,7 @@ export function addCart() {
       client.set('cart_data ' + __VU, JSON.stringify(cart), 0);
     }  
   
-    sleep(500);
+    sleep(0.5);
 }
 
 
@@ -225,7 +200,7 @@ export function editCart() {
       client.set('cart_data ' + __VU, JSON.stringify(data["carts"]), 0);
     }  
   
-    sleep(500);
+    sleep(0.5);
 }
 
 
@@ -245,5 +220,5 @@ export function PurchaseFromCarts() {
       'status is 200': (r) => r.status === 200,
     });
   
-    sleep(500);
+    sleep(0.5);
 }
