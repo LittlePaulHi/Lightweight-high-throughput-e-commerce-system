@@ -13,14 +13,6 @@ type PurchaseFromCartsRequestBody struct {
 	CartIDs   []int `json:"cartIDs" binding:"required"`
 }
 
-var (
-	syncKafka sync.Kafka
-)
-
-func init() {
-	syncKafka.Producer = sync.CrateNewSyncProducer()
-}
-
 func PurchaseFromCarts(c *gin.Context) {
 	responseGin := ResponseGin{Context: c}
 
@@ -31,6 +23,14 @@ func PurchaseFromCarts(c *gin.Context) {
 		responseGin.Response(http.StatusBadRequest, nil)
 		return
 	}
+
+	var syncKafka sync.Kafka
+	syncKafka.Producer = sync.CrateNewSyncProducer()
+	defer func() {
+		if err := syncKafka.Close(); err != nil {
+			logger.KafkaProducer.Warnf("Close syncProducer occurs error: %v\n", err)
+		}
+	}()
 
 	payload, err := syncKafka.PublishBuyEvent(requestBody.AccountID, requestBody.CartIDs)
 	if err != nil {

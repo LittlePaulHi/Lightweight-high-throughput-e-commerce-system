@@ -1,6 +1,7 @@
 package mariadb
 
 import (
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -57,6 +58,40 @@ func (product *Product) UpdateProduct() (*Product, error) {
 	}
 
 	return product, nil
+}
+
+func PurchaseProduct(productID int, quantity int) (*Product, error) {
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Error; err != nil {
+		return nil, err
+	}
+
+	var product Product
+	if err := tx.Model(&Product{}).Where("ID = ?", productID).Take(&product).Error; err != nil {
+		return nil, err
+	}
+
+	if product.Quantity < quantity {
+		return nil, errors.New("Product " + product.Name + " already sold out")
+	}
+
+	if err := tx.Model(&Product{}).Where("ID = ?", product.ID).Take(&Product{}).UpdateColumns(
+		map[string]interface{}{
+			"Quantity":  product.Quantity - quantity,
+			"UpdatedAt": time.Now(),
+		},
+	).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	return &product, tx.Commit().Error
 }
 
 type AllProducts struct {
