@@ -14,6 +14,9 @@ type PurchaseFromCartsRequestBody struct {
 }
 
 func PurchaseFromCarts(c *gin.Context) {
+	if MaxGoRoutines != 0 {
+		<-GoRoutineSemaPhore
+	}
 	responseGin := ResponseGin{Context: c}
 
 	requestBody := PurchaseFromCartsRequestBody{}
@@ -41,5 +44,9 @@ func PurchaseFromCarts(c *gin.Context) {
 		responseGin.Response(http.StatusInternalServerError, nil)
 	} else {
 		responseGin.Response(http.StatusOK, payload)
+	}
+
+	if MaxGoRoutines != 0 {
+		GoRoutineSemaPhore <- 1
 	}
 }

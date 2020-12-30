@@ -24,6 +24,11 @@ type GetAllCartsByAccountIDRequestHeader struct {
 }
 
 func GetAllCartsByAccountID(c *gin.Context) {
+	if MaxGoRoutines != 0 {
+		<-GoRoutineSemaPhore
+		//logger.APILog.Infof("value from GoRoutineSemaPhore: %d\n", value)
+	}
+
 	responseGin := ResponseGin{Context: c}
 
 	var httpStatus string
@@ -63,6 +68,10 @@ func GetAllCartsByAccountID(c *gin.Context) {
 
 	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
+
+	if MaxGoRoutines != 0 {
+		GoRoutineSemaPhore <- 1
+	}
 }
 
 // AddCart API
@@ -78,6 +87,9 @@ type AddCartRequestBody struct {
 }
 
 func AddCart(c *gin.Context) {
+	if MaxGoRoutines != 0 {
+		<-GoRoutineSemaPhore
+	}
 	responseGin := ResponseGin{Context: c}
 
 	var httpStatus string
@@ -113,6 +125,10 @@ func AddCart(c *gin.Context) {
 
 	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
+
+	if MaxGoRoutines != 0 {
+		GoRoutineSemaPhore <- 1
+	}
 }
 
 // EditCart API
@@ -128,6 +144,9 @@ type EditCartRequestBody struct {
 }
 
 func EditCart(c *gin.Context) {
+	if MaxGoRoutines != 0 {
+		<-GoRoutineSemaPhore
+	}
 	responseGin := ResponseGin{Context: c}
 
 	var httpStatus string
@@ -160,4 +179,8 @@ func EditCart(c *gin.Context) {
 
 	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
+
+	if MaxGoRoutines != 0 {
+		GoRoutineSemaPhore <- 1
+	}
 }

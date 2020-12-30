@@ -23,6 +23,10 @@ type GetAllOrdersByAccountIDRequestHeader struct {
 }
 
 func GetAllOrdersByAccountID(c *gin.Context) {
+	if MaxGoRoutines != 0 {
+		<-GoRoutineSemaPhore
+		//logger.APILog.Infof("value from GoRoutineSemaPhore: %d\n", value)
+	}
 	responseGin := ResponseGin{Context: c}
 
 	var httpStatus string
@@ -54,6 +58,9 @@ func GetAllOrdersByAccountID(c *gin.Context) {
 
 	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
+	if MaxGoRoutines != 0 {
+		GoRoutineSemaPhore <- 1
+	}
 }
 
 // GetAllOrderItemsByOrderID API
@@ -67,6 +74,9 @@ type GetAllOrderItemsByOrderIDRequestHeader struct {
 }
 
 func GetAllOrderItemsByOrderID(c *gin.Context) {
+	if MaxGoRoutines != 0 {
+		<-GoRoutineSemaPhore
+	}
 	responseGin := ResponseGin{Context: c}
 
 	var httpStatus string
@@ -98,4 +108,7 @@ func GetAllOrderItemsByOrderID(c *gin.Context) {
 
 	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
+	if MaxGoRoutines != 0 {
+		GoRoutineSemaPhore <- 1
+	}
 }
