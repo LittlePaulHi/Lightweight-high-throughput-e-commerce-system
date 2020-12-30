@@ -59,7 +59,7 @@ func GetAllOrdersByAccountID(c *gin.Context) {
 	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
 	if MaxGoRoutines != 0 {
-		GoRoutineSemaPhore<-1
+		GoRoutineSemaPhore <- 1
 	}
 }
 
@@ -109,6 +109,6 @@ func GetAllOrderItemsByOrderID(c *gin.Context) {
 	httpStatus = "OK"
 	responseGin.Response(http.StatusOK, data)
 	if MaxGoRoutines != 0 {
-		GoRoutineSemaPhore<-1
+		GoRoutineSemaPhore <- 1
 	}
 }

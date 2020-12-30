@@ -47,6 +47,6 @@ func PurchaseFromCarts(c *gin.Context) {
 	}
 
 	if MaxGoRoutines != 0 {
-		GoRoutineSemaPhore<-1
+		GoRoutineSemaPhore <- 1
 	}
 }

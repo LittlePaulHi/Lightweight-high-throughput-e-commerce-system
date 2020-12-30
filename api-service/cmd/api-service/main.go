@@ -1,10 +1,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 	"time"
-	"flag"
 
 	"golang.org/x/sync/errgroup"
 

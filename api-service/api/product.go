@@ -42,6 +42,6 @@ func GetAllProducts(c *gin.Context) {
 	responseGin.Response(http.StatusOK, data)
 
 	if MaxGoRoutines != 0 {
-		GoRoutineSemaPhore<-1
+		GoRoutineSemaPhore <- 1
 	}
 }
